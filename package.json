@@ -1,0 +1,44 @@
+{
+  "name": "claude-4-opencode",
+  "version": "0.0.1",
+  "description": "Run Claude Code plugins and marketplaces on opencode v2",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Heretek-AI/claude-4-opencode.git"
+  },
+  "bin": {
+    "c4o": "./dist/cli.js"
+  },
+  "exports": {
+    ".": "./dist/server.js",
+    "./server": "./dist/server.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "bun build src/server.ts src/cli.ts --outdir dist --target node --format esm",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test ./test",
+    "e2e": "bun run build && bun test ./e2e --timeout 600000 --reporter=junit --reporter-outfile=.e2e/report/junit.xml",
+    "c4o": "bun src/cli.ts",
+    "e2e:report": "bun e2e/report/matrix.ts",
+    "e2e:oracle": "bun e2e/oracle/capture.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@opencode/plugin": "2.0.26",
+    "@types/bun": "^1.4.2",
+    "prettier": "^3.9.10",
+    "typescript": "^7.0.2"
+  }
+}

@@ -1,0 +1,71 @@
+name: Drift
+
+# Moves every pinned marketplace to its current commit, recaptures what real Claude Code lists
+# for it, and runs the whole suite against the newest opencode. A clean run opens a pull request
+# with the new pins. A failing run opens an issue, because something upstream changed.
+
+on:
+  schedule:
+    - cron: "41 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    concurrency:
+      group: drift
+      cancel-in-progress: false
+    env:
+      # NOTE: github.token does not trigger CI on the created PR. To run CI on drift PRs,
+      # replace GH_TOKEN with a PAT (with contents:write and pull-requests:write) stored as a secret.
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: true
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.2
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+      - name: Install opencode and Claude Code
+        run: |
+          npm install --global @opencode/cli@latest @anthropic-ai/claude-code@latest
+          opencode --version
+          claude --version
+      - run: bun install --frozen-lockfile
+      - name: Move pins to the current commits
+        run: bun e2e/drift.ts
+      - name: Recapture Claude Code inventories
+        # Needs no credentials: Claude Code only installs the plugins and prints its startup inventory.
+        run: bun run e2e:oracle
+      - name: Run end-to-end tests
+        run: bun run e2e
+      - name: Open a pull request with the new pins
+        if: success()
+        run: |
+          if git diff --quiet -- e2e/targets.lock.json e2e/golden; then
+            echo "::notice::Pins are already current."
+            exit 0
+          fi
+          branch="drift-$(date -u +%Y%m%d-%H%M%S)-$GITHUB_RUN_ID"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add e2e/targets.lock.json e2e/golden
+          git commit -m "chore(e2e): move marketplace pins to current commits"
+          git push origin "$branch"
+          gh pr create --title "chore(e2e): move marketplace pins to current commits" \
+            --body "The full suite passes against the current commit of every target marketplace and the newest opencode. Merging makes these the pinned versions."
+      - name: Report breakage
+        if: failure()
+        run: |
+          gh issue create --title "Drift run failed on $(date -u +%Y-%m-%d)" \
+            --body "The suite no longer passes against current upstream versions. See $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

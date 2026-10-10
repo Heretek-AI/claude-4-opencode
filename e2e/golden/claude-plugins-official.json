@@ -1,0 +1,348 @@
+{
+  "claudeCode": "2.1.287",
+  "repo": "anthropics/claude-plugins-official",
+  "sha": "b8e53f1c05dff3b6d751297f6527990ffc81c2f4",
+  "failed": {},
+  "plugins": {
+    "agent-sdk-dev": {
+      "commands": [
+        "agent-sdk-dev:new-sdk-app"
+      ],
+      "skills": [],
+      "agents": [
+        "agent-sdk-dev:agent-sdk-verifier-py",
+        "agent-sdk-dev:agent-sdk-verifier-ts"
+      ]
+    },
+    "asana": {
+      "commands": [
+        "asana:asana-setup"
+      ],
+      "skills": [],
+      "agents": []
+    },
+    "claude-code-setup": {
+      "commands": [
+        "claude-code-setup:claude-automation-recommender"
+      ],
+      "skills": [
+        "claude-code-setup:claude-automation-recommender"
+      ],
+      "agents": []
+    },
+    "claude-md-management": {
+      "commands": [
+        "claude-md-management:claude-md-improver",
+        "claude-md-management:revise-claude-md"
+      ],
+      "skills": [
+        "claude-md-management:claude-md-improver"
+      ],
+      "agents": []
+    },
+    "claude-security": {
+      "commands": [
+        "claude-security:claude-security",
+        "claude-security:scan"
+      ],
+      "skills": [
+        "claude-security:claude-security",
+        "claude-security:scan"
+      ],
+      "agents": [
+        "claude-security:claude-security",
+        "claude-security:explore",
+        "claude-security:patch-generator",
+        "claude-security:patch-verifier",
+        "claude-security:scan-inventory",
+        "claude-security:scan-loader",
+        "claude-security:scan-redactor",
+        "claude-security:scan-researcher",
+        "claude-security:scan-verifier"
+      ]
+    },
+    "code-modernization": {
+      "commands": [
+        "code-modernization:modernize",
+        "code-modernization:modernize-assess",
+        "code-modernization:modernize-brief",
+        "code-modernization:modernize-extract-rules",
+        "code-modernization:modernize-extract-rules-mine",
+        "code-modernization:modernize-harden",
+        "code-modernization:modernize-harden-scan",
+        "code-modernization:modernize-map",
+        "code-modernization:modernize-portfolio-assess",
+        "code-modernization:modernize-preflight",
+        "code-modernization:modernize-reimagine",
+        "code-modernization:modernize-reimagine-scaffold",
+        "code-modernization:modernize-review",
+        "code-modernization:modernize-status",
+        "code-modernization:modernize-transform",
+        "code-modernization:modernize-uplift",
+        "code-modernization:modernize-uplift-deltas",
+        "code-modernization:modernize-uplift-migrate",
+        "code-modernization:modernize-verify"
+      ],
+      "skills": [
+        "code-modernization:modernize-extract-rules-mine",
+        "code-modernization:modernize-harden-scan",
+        "code-modernization:modernize-portfolio-assess",
+        "code-modernization:modernize-reimagine-scaffold",
+        "code-modernization:modernize-uplift-deltas",
+        "code-modernization:modernize-uplift-migrate"
+      ],
+      "agents": [
+        "code-modernization:architecture-critic",
+        "code-modernization:business-rules-extractor",
+        "code-modernization:legacy-analyst",
+        "code-modernization:scaffolder",
+        "code-modernization:security-auditor",
+        "code-modernization:test-engineer",
+        "code-modernization:uplift-migrator",
+        "code-modernization:version-delta-analyst"
+      ]
+    },
+    "code-review": {
+      "commands": [
+        "code-review:code-review"
+      ],
+      "skills": [],
+      "agents": []
+    },
+    "code-simplifier": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "code-simplifier:code-simplifier"
+      ]
+    },
+    "commit-commands": {
+      "commands": [
+        "commit-commands:clean_gone",
+        "commit-commands:commit",
+        "commit-commands:commit-push-pr"
+      ],
+      "skills": [],
+      "agents": []
+    },
+    "cwc-makers": {
+      "commands": [
+        "cwc-makers:cardputer-buddy",
+        "cwc-makers:m5-onboard",
+        "cwc-makers:maker-setup"
+      ],
+      "skills": [
+        "cwc-makers:cardputer-buddy",
+        "cwc-makers:m5-onboard",
+        "cwc-makers:maker-setup"
+      ],
+      "agents": []
+    },
+    "discord": {
+      "commands": [
+        "discord:access",
+        "discord:configure"
+      ],
+      "skills": [
+        "discord:access",
+        "discord:configure"
+      ],
+      "agents": []
+    },
+    "feature-dev": {
+      "commands": [
+        "feature-dev:feature-dev"
+      ],
+      "skills": [],
+      "agents": [
+        "feature-dev:code-architect",
+        "feature-dev:code-explorer",
+        "feature-dev:code-reviewer"
+      ]
+    },
+    "frontend-design": {
+      "commands": [
+        "frontend-design:frontend-design"
+      ],
+      "skills": [
+        "frontend-design:frontend-design"
+      ],
+      "agents": []
+    },
+    "hookify": {
+      "commands": [
+        "hookify:configure",
+        "hookify:help",
+        "hookify:hookify",
+        "hookify:list",
+        "hookify:writing-rules"
+      ],
+      "skills": [
+        "hookify:writing-rules"
+      ],
+      "agents": [
+        "hookify:conversation-analyzer"
+      ]
+    },
+    "imessage": {
+      "commands": [
+        "imessage:access",
+        "imessage:configure"
+      ],
+      "skills": [
+        "imessage:access",
+        "imessage:configure"
+      ],
+      "agents": []
+    },
+    "math-olympiad": {
+      "commands": [
+        "math-olympiad:math-olympiad"
+      ],
+      "skills": [
+        "math-olympiad:math-olympiad"
+      ],
+      "agents": []
+    },
+    "math-proof": {
+      "commands": [
+        "math-proof:siege",
+        "math-proof:solo"
+      ],
+      "skills": [
+        "math-proof:siege",
+        "math-proof:solo"
+      ],
+      "agents": [
+        "math-proof:math-proof-judge",
+        "math-proof:math-proof-worker",
+        "math-proof:math-proof-worker-deep"
+      ]
+    },
+    "mcp-server-dev": {
+      "commands": [
+        "mcp-server-dev:build-mcp-app",
+        "mcp-server-dev:build-mcp-server",
+        "mcp-server-dev:build-mcpb"
+      ],
+      "skills": [
+        "mcp-server-dev:build-mcp-app",
+        "mcp-server-dev:build-mcp-server",
+        "mcp-server-dev:build-mcpb"
+      ],
+      "agents": []
+    },
+    "mcp-tunnels": {
+      "commands": [
+        "mcp-tunnels:create-docker-mcp-tunnel"
+      ],
+      "skills": [],
+      "agents": []
+    },
+    "playground": {
+      "commands": [
+        "playground:playground"
+      ],
+      "skills": [
+        "playground:playground"
+      ],
+      "agents": []
+    },
+    "plugin-dev": {
+      "commands": [
+        "plugin-dev:agent-development",
+        "plugin-dev:command-development",
+        "plugin-dev:create-plugin",
+        "plugin-dev:hook-development",
+        "plugin-dev:mcp-integration",
+        "plugin-dev:plugin-settings",
+        "plugin-dev:plugin-structure",
+        "plugin-dev:skill-development"
+      ],
+      "skills": [
+        "plugin-dev:agent-development",
+        "plugin-dev:command-development",
+        "plugin-dev:hook-development",
+        "plugin-dev:mcp-integration",
+        "plugin-dev:plugin-settings",
+        "plugin-dev:plugin-structure",
+        "plugin-dev:skill-development"
+      ],
+      "agents": [
+        "plugin-dev:agent-creator",
+        "plugin-dev:plugin-validator",
+        "plugin-dev:skill-reviewer"
+      ]
+    },
+    "pr-review-toolkit": {
+      "commands": [
+        "pr-review-toolkit:review-pr"
+      ],
+      "skills": [],
+      "agents": [
+        "pr-review-toolkit:code-reviewer",
+        "pr-review-toolkit:code-simplifier",
+        "pr-review-toolkit:comment-analyzer",
+        "pr-review-toolkit:pr-test-analyzer",
+        "pr-review-toolkit:silent-failure-hunter",
+        "pr-review-toolkit:type-design-analyzer"
+      ]
+    },
+    "project-artifact": {
+      "commands": [
+        "project-artifact:project-artifact"
+      ],
+      "skills": [
+        "project-artifact:project-artifact"
+      ],
+      "agents": []
+    },
+    "ralph-loop": {
+      "commands": [
+        "ralph-loop:cancel-ralph",
+        "ralph-loop:help",
+        "ralph-loop:ralph-loop"
+      ],
+      "skills": [],
+      "agents": []
+    },
+    "receipts": {
+      "commands": [
+        "receipts:receipts"
+      ],
+      "skills": [
+        "receipts:receipts"
+      ],
+      "agents": []
+    },
+    "session-report": {
+      "commands": [
+        "session-report:session-report"
+      ],
+      "skills": [
+        "session-report:session-report"
+      ],
+      "agents": []
+    },
+    "skill-creator": {
+      "commands": [
+        "skill-creator:skill-creator"
+      ],
+      "skills": [
+        "skill-creator:skill-creator"
+      ],
+      "agents": []
+    },
+    "telegram": {
+      "commands": [
+        "telegram:access",
+        "telegram:configure"
+      ],
+      "skills": [
+        "telegram:access",
+        "telegram:configure"
+      ],
+      "agents": []
+    }
+  }
+}

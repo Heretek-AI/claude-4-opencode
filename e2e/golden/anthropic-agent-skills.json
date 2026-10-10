@@ -1,0 +1,81 @@
+{
+  "claudeCode": "2.1.287",
+  "repo": "anthropics/skills",
+  "sha": "dbd4588f9e1033efb41dad4bef2f7947c8993d44",
+  "failed": {},
+  "plugins": {
+    "academy-guide": {
+      "commands": [
+        "academy-guide:academy-guide"
+      ],
+      "skills": [
+        "academy-guide:academy-guide"
+      ],
+      "agents": []
+    },
+    "claude-api": {
+      "commands": [
+        "claude-api:claude-api"
+      ],
+      "skills": [
+        "claude-api:claude-api"
+      ],
+      "agents": []
+    },
+    "discernment-nudge": {
+      "commands": [
+        "discernment-nudge:discernment-nudge"
+      ],
+      "skills": [
+        "discernment-nudge:discernment-nudge"
+      ],
+      "agents": []
+    },
+    "document-skills": {
+      "commands": [
+        "document-skills:docx",
+        "document-skills:pdf",
+        "document-skills:pptx",
+        "document-skills:xlsx"
+      ],
+      "skills": [
+        "document-skills:docx",
+        "document-skills:pdf",
+        "document-skills:pptx",
+        "document-skills:xlsx"
+      ],
+      "agents": []
+    },
+    "example-skills": {
+      "commands": [
+        "example-skills:algorithmic-art",
+        "example-skills:brand-guidelines",
+        "example-skills:canvas-design",
+        "example-skills:doc-coauthoring",
+        "example-skills:frontend-design",
+        "example-skills:internal-comms",
+        "example-skills:mcp-builder",
+        "example-skills:skill-creator",
+        "example-skills:slack-gif-creator",
+        "example-skills:theme-factory",
+        "example-skills:web-artifacts-builder",
+        "example-skills:webapp-testing"
+      ],
+      "skills": [
+        "example-skills:algorithmic-art",
+        "example-skills:brand-guidelines",
+        "example-skills:canvas-design",
+        "example-skills:doc-coauthoring",
+        "example-skills:frontend-design",
+        "example-skills:internal-comms",
+        "example-skills:mcp-builder",
+        "example-skills:skill-creator",
+        "example-skills:slack-gif-creator",
+        "example-skills:theme-factory",
+        "example-skills:web-artifacts-builder",
+        "example-skills:webapp-testing"
+      ],
+      "agents": []
+    }
+  }
+}
