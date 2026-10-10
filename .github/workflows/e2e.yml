@@ -1,0 +1,61 @@
+name: E2E
+
+# Drives the real opencode binary with real plugins from the marketplaces pinned in
+# e2e/targets.lock.json. A scripted stub plays the model, so this needs no secrets and
+# gives the same result on every run, including on pull requests from forks.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scripted:
+    name: opencode ${{ matrix.opencode }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # The pinned version gates merges. `latest` shows upstream changes early without blocking.
+        opencode: ["2.0.26", "latest"]
+    continue-on-error: ${{ matrix.opencode == 'latest' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Install opencode
+        run: |
+          npm install --global "@opencode/cli@${{ matrix.opencode }}"
+          opencode --version
+      - name: Restore marketplace checkouts
+        uses: actions/cache@v6
+        with:
+          path: .e2e/cache
+          key: e2e-cache-${{ hashFiles('e2e/targets.lock.json') }}
+      - run: bun install --frozen-lockfile
+      - name: Run end-to-end tests
+        run: bun run e2e
+      - name: Compatibility report
+        if: always()
+        run: |
+          mkdir -p .e2e/report
+          bun run --silent e2e:report > .e2e/report/COMPATIBILITY.md
+          cat .e2e/report/COMPATIBILITY.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: e2e-report-opencode-${{ matrix.opencode }}
+          path: .e2e/report
