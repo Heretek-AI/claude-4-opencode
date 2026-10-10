@@ -50,6 +50,25 @@ export function hasHooks(plugins: readonly ActivePlugin[], event: string) {
 }
 
 /**
+ * Whether any synchronous handler could run for this invocation, testing
+ * matchers and `if` conditions the same way `runHooks` does. Callers use it
+ * to skip expensive setup (transcript synthesis) when nothing could match.
+ */
+export function hasMatchingHandler(plugins: readonly ActivePlugin[], invocation: Invocation) {
+  for (const active of plugins) {
+    for (const matcher of active.plugin.hooks[invocation.event] ?? []) {
+      if (!matcherMatches(matcher.matcher, invocation.subject)) continue
+      for (const handler of matcher.hooks) {
+        if (handler.async === true) continue
+        if (typeof handler.if === "string" && !conditionMatches(handler.if, invocation.toolCall)) continue
+        return true
+      }
+    }
+  }
+  return false
+}
+
+/**
  * Runs every matching handler of an event across all active plugins, in parallel as Claude Code
  * does, and merges their results. Any block wins.
  */
@@ -65,12 +84,13 @@ export async function runHooks(
       if (!matcherMatches(matcher.matcher, invocation.subject)) continue
       for (const handler of matcher.hooks) {
         if (typeof handler.if === "string" && !conditionMatches(handler.if, invocation.toolCall)) continue
+        // Async handlers cannot influence the event, so they are skipped
+        // before spawning any work for them.
+        if (handler.async === true) continue
         const task = runHandler(handler, invocation, session, context).catch((error): HandlerResult => {
           debug("hook failed", { plugin: active.id, event: invocation.event, error: String(error) })
           return {}
         })
-        // Async handlers run in the background and cannot influence the event.
-        if (handler.async === true) continue
         tasks.push(task)
       }
     }
@@ -124,6 +144,25 @@ function glob(pattern: string) {
   return new RegExp(`^${escaped}$`)
 }
 
+/** Kills the whole process group when possible, falling back to the direct child. */
+function killProcessGroup(child: ReturnType<typeof spawn>) {
+  if (child.pid !== undefined) {
+    try {
+      // Negative PIDs address the group started with `detached: true`.
+      // Throws on platforms without group semantics (Windows) or when exited.
+      process.kill(-child.pid, "SIGKILL")
+      return
+    } catch {
+      // Fall through to the direct kill below.
+    }
+  }
+  try {
+    child.kill("SIGKILL")
+  } catch {
+    // Already exited; the `close` handler settles the promise.
+  }
+}
+
 function runHandler(
   handler: HookHandler,
   invocation: Invocation,
@@ -162,6 +201,9 @@ function runCommand(
       cwd: session.cwd,
       env: { ...process.env, ...pluginEnvironment(context) },
       stdio: ["pipe", "pipe", "pipe"],
+      // A new process group, so the timeout below can kill grandchildren
+      // (e.g. `sleep 30 & sleep 30`) instead of only the direct bash child.
+      detached: true,
     })
     let stdout = ""
     let stderr = ""
@@ -174,7 +216,7 @@ function runCommand(
     }
     const timer = setTimeout(
       () => {
-        child.kill("SIGKILL")
+        killProcessGroup(child)
         debug("hook timed out", { event, command })
         finish({})
       },
@@ -205,7 +247,12 @@ async function runHttp(
   event: string,
   context: VarContext,
 ): Promise<HandlerResult> {
-  const expand = (value: string) => substituteWithEnv(value, context, process.env)
+  // Only explicitly allowlisted variables expand. Anything else stays
+  // literal, so a hook cannot exfiltrate unrelated secrets from the environment.
+  const allowed = handler.allowedEnvVars
+  const env: Record<string, string | undefined> =
+    allowed === undefined ? {} : Object.fromEntries(allowed.map((name) => [name, process.env[name]]))
+  const expand = (value: string) => substituteWithEnv(value, context, env)
   const response = await fetch(expand(handler.url), {
     method: "POST",
     headers: {

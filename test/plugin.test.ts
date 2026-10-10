@@ -1,7 +1,10 @@
 import { expect, test } from "bun:test"
+import { chmodSync, symlinkSync } from "node:fs"
 import path from "node:path"
 import { loadPlugin } from "../src/spec/plugin.ts"
 import type { MarketplaceEntry } from "../src/spec/types.ts"
+import { loadActivePlugins } from "../src/store/installs.ts"
+import { storePaths } from "../src/store/paths.ts"
 import { skill, tree } from "./helpers.ts"
 
 const errors = (plugin: ReturnType<typeof loadPlugin>) => plugin.issues.filter((issue) => issue.level === "error")
@@ -245,4 +248,95 @@ test("entry mcpServers and lspServers apply only when the entry is the manifest"
   expect(Object.keys(loadPlugin({ root: bare, entry: { name: "p", source: "./p", ...servers } }).mcpServers)).toEqual([
     "extra",
   ])
+})
+
+test("a skills entry pointing at a SKILL.md file does not throw", () => {
+  const root = tree({
+    ".claude-plugin/plugin.json": { name: "p", skills: ["./tools/pdf/SKILL.md"] },
+    "tools/pdf/SKILL.md": skill("PDF"),
+  })
+  let plugin: ReturnType<typeof loadPlugin> | undefined
+  expect(() => {
+    plugin = loadPlugin({ root })
+  }).not.toThrow()
+  expect(plugin!.skills.map((item) => item.id)).toEqual(["p:pdf"])
+})
+
+test("commands and agents entries pointing at files do not throw", () => {
+  const root = tree({
+    ".claude-plugin/plugin.json": { name: "p", commands: ["./c/one.md"], agents: ["./a/helper.md"] },
+    "c/one.md": "one",
+    "a/helper.md": "---\ndescription: x\n---\nhelper",
+  })
+  let plugin: ReturnType<typeof loadPlugin> | undefined
+  expect(() => {
+    plugin = loadPlugin({ root })
+  }).not.toThrow()
+  expect(plugin!.commands.map((item) => item.id)).toEqual(["p:one"])
+  expect(plugin!.agents.map((item) => item.id)).toEqual(["p:helper"])
+})
+
+test("a skills entry pointing at a non-skill file records an issue instead of throwing", () => {
+  const root = tree({
+    ".claude-plugin/plugin.json": { name: "p", skills: ["./notes.txt"] },
+    "notes.txt": "hello",
+  })
+  let plugin: ReturnType<typeof loadPlugin> | undefined
+  expect(() => {
+    plugin = loadPlugin({ root })
+  }).not.toThrow()
+  expect(plugin!.skills).toEqual([])
+  expect(plugin!.issues.length).toBeGreaterThan(0)
+})
+
+test("a symlink outside the root is rejected and skipped during scans", () => {
+  const outside = tree({ "evil/SKILL.md": skill("evil"), "evil.md": "evil" })
+  const root = tree({
+    ".claude-plugin/plugin.json": { name: "p", skills: ["./link"] },
+    "commands/ok.md": "ok",
+  })
+  symlinkSync(path.join(outside, "evil"), path.join(root, "link"))
+  symlinkSync(path.join(outside, "evil.md"), path.join(root, "commands", "evil.md"))
+  let plugin: ReturnType<typeof loadPlugin> | undefined
+  expect(() => {
+    plugin = loadPlugin({ root })
+  }).not.toThrow()
+  expect(plugin!.skills).toEqual([])
+  expect(plugin!.commands.map((item) => item.id)).toEqual(["p:ok"])
+  expect(errors(plugin!).some((issue) => issue.message.includes("escapes"))).toBe(true)
+})
+
+test("a symlink cycle does not overflow", () => {
+  const root = tree({
+    ".claude-plugin/plugin.json": { name: "p" },
+    "commands/ok.md": "ok",
+    "agents/a.md": "---\ndescription: x\n---\na",
+    "skills/s/SKILL.md": skill("s"),
+  })
+  symlinkSync(root, path.join(root, "commands", "loop"))
+  symlinkSync(root, path.join(root, "agents", "loop"))
+  symlinkSync(path.join(root, "skills"), path.join(root, "skills", "s", "loop"))
+  let plugin: ReturnType<typeof loadPlugin> | undefined
+  expect(() => {
+    plugin = loadPlugin({ root })
+  }).not.toThrow()
+  expect(plugin!.commands.map((item) => item.id)).toEqual(["p:ok"])
+  expect(plugin!.skills.map((item) => item.id)).toEqual(["p:s"])
+})
+
+test("one broken plugin does not prevent others from loading", () => {
+  const paths = storePaths({ C4O_HOME: tree({}) })
+  const good = tree({ ".claude-plugin/plugin.json": { name: "good" }, "skills/a/SKILL.md": skill("a") })
+  const bad = tree({ ".claude-plugin/plugin.json": { name: "bad" }, "skills/b/SKILL.md": skill("b") })
+  // An unreadable skill makes loadPlugin throw; loadActivePlugins must skip it and keep the good one.
+  chmodSync(path.join(bad, "skills", "b", "SKILL.md"), 0)
+  try {
+    let actives: ReturnType<typeof loadActivePlugins> | undefined
+    expect(() => {
+      actives = loadActivePlugins(paths, { pluginDirs: [bad, good] })
+    }).not.toThrow()
+    expect(actives!.map((item) => item.plugin.name)).toContain("good")
+  } finally {
+    chmodSync(path.join(bad, "skills", "b", "SKILL.md"), 0o644)
+  }
 })

@@ -90,9 +90,20 @@ export function resolveSource(source: PluginSource, marketplace: Marketplace, ro
   }
   if (source.source === "git-subdir") {
     const url = asString(source.url)
-    const subdir = asString(source.path)
-    if (url === undefined || subdir === undefined)
+    const rawSubdir = asString(source.path)
+    if (url === undefined || rawSubdir === undefined)
       return { kind: "unsupported", reason: "git-subdir source needs url and path" }
+    const subdir = rawSubdir.replace(/^\/+|\/+$/g, "")
+    if (
+      subdir === "" ||
+      subdir === "." ||
+      path.isAbsolute(rawSubdir) ||
+      path.posix.isAbsolute(rawSubdir) ||
+      path.win32.isAbsolute(rawSubdir) ||
+      subdir.includes("\\") ||
+      subdir.split("/").some((segment) => segment === "" || segment === "." || segment === "..")
+    )
+      return { kind: "unsupported", reason: `git-subdir path escapes the repository: ${rawSubdir}` }
     return { kind: "git", url: gitUrl(url), subdir, ...pin }
   }
   if (source.source === "npm") {

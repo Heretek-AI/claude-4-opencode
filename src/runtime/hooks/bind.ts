@@ -4,7 +4,7 @@ import type { ActivePlugin } from "../../store/installs.ts"
 import { mcpServerName } from "../../translate/components.ts"
 import { applyUpdatedInput, toClaudeToolCall, type ClaudeToolCall } from "../../translate/tools.ts"
 import { debug } from "../debug.ts"
-import { hasHooks, runHooks, type Invocation, type Outcome } from "./engine.ts"
+import { hasHooks, hasMatchingHandler, runHooks, type Invocation, type Outcome } from "./engine.ts"
 import { writeTranscript } from "./transcript.ts"
 
 export interface HookOptions {
@@ -16,6 +16,8 @@ export interface HookOptions {
 interface SessionState {
   /** Context from SessionStart hooks, re-added to the system prompt on every request. Unset until they ran. */
   startContext?: string[]
+  /** Shared SessionStart work so concurrent requests await one run instead of racing. */
+  startContextPromise?: Promise<string[]>
   /** True while the session is continuing because a Stop hook blocked. Reported as `stop_hook_active`. */
   stopActive: boolean
   child?: boolean
@@ -36,7 +38,9 @@ export async function bindHooks(
   /** Sessions whose next prompt is one this plugin sent, which must not trigger UserPromptSubmit. */
   const internalPrompts = new Set<string>()
   /** PreToolUse context, held until the tool finishes so it can ride along with the result. */
-  const pendingContext = new Map<string, string[]>()
+  const pendingContext = new Map<string, { sessionID: string; context: string[] }>()
+  /** Bound so a session that never sees execute.after cannot leak entries forever. */
+  const MAX_PENDING_CONTEXT = 200
   let disposed = false
 
   const sessionState = (sessionID: string) => {
@@ -56,8 +60,19 @@ export async function bindHooks(
     return session.child
   }
 
+  const rememberPending = (id: string, sessionID: string, context: string[]) => {
+    if (pendingContext.size >= MAX_PENDING_CONTEXT) {
+      const oldest = pendingContext.keys().next()
+      if (!oldest.done) pendingContext.delete(oldest.value)
+    }
+    pendingContext.set(id, { sessionID, context })
+  }
+
   const run = async (sessionID: string, invocation: Invocation): Promise<Outcome> => {
     if (!hasHooks(state.plugins, invocation.event)) return NOTHING
+    // Matchers and `if` conditions are cheap; the transcript round-trip is
+    // not. Skip it when no handler could match this invocation.
+    if (!hasMatchingHandler(state.plugins, invocation)) return NOTHING
     const transcriptPath = await ctx.session
       .context({ sessionID: sessionID as never })
       .then((value) => {
@@ -81,7 +96,7 @@ export async function bindHooks(
   const describe = (tool: string, input: unknown): ClaudeToolCall => {
     for (const active of state.plugins) {
       for (const server of Object.keys(active.plugin.mcpServers)) {
-        const prefix = `${mcpServerName(active.plugin.name, server).replaceAll(".", "_")}_`
+        const prefix = `${mcpServerName(active.plugin.name, server)}_`
         if (!tool.startsWith(prefix)) continue
         return {
           name: `mcp__plugin_${active.plugin.name}_${server}__${tool.slice(prefix.length)}`,
@@ -104,11 +119,11 @@ export async function bindHooks(
       })
       if (outcome.blocked !== undefined) throw new Error([outcome.blocked, ...outcome.context].join("\n\n"))
       if (outcome.updatedInput) event.input = applyUpdatedInput(event.tool, event.input, outcome.updatedInput)
-      if (outcome.context.length > 0) pendingContext.set(event.id, outcome.context)
+      if (outcome.context.length > 0) rememberPending(event.id, event.sessionID, outcome.context)
     }),
 
     await ctx.tool.hook("execute.after", async (event) => {
-      const earlier = pendingContext.get(event.id) ?? []
+      const earlier = pendingContext.get(event.id)?.context ?? []
       pendingContext.delete(event.id)
       const name = event.status === "completed" ? "PostToolUse" : "PostToolUseFailure"
       const call = describe(event.tool, event.input)
@@ -127,10 +142,24 @@ export async function bindHooks(
       })
       // A PostToolUse hook cannot undo the call. Its block reason and context are feedback for the model.
       const feedback = [...earlier, ...outcome.context, ...(outcome.blocked === undefined ? [] : [outcome.blocked])]
-      if (feedback.length === 0 || event.status !== "completed") return
-      event.result = {
-        ...event.result,
-        content: [...contentParts(event.result), { type: "text", text: feedback.join("\n\n") }],
+      if (feedback.length === 0) return
+      if (event.status === "completed") {
+        event.result = {
+          ...event.result,
+          content: [...contentParts(event.result), { type: "text", text: feedback.join("\n\n") }],
+        }
+        return
+      }
+      // On failure there is no result to extend (`execute.after` cannot fail,
+      // so throwing is not a channel). The mutated error is what the model
+      // sees for a failed tool call, so the feedback rides along with it.
+      const text = feedback.join("\n\n")
+      debug("hook feedback on failed tool", { tool: event.tool, feedback: text.slice(0, 2000) })
+      try {
+        const previous = event.error.message
+        ;(event.error as { message: string }).message = previous ? `${previous}\n\n${text}` : text
+      } catch (error) {
+        debug("hook feedback could not attach to error", { tool: event.tool, error: String(error) })
       }
     }),
 
@@ -147,17 +176,22 @@ export async function bindHooks(
     await ctx.session.hook("context", async (event) => {
       const session = sessionState(event.sessionID)
       if (session.startContext === undefined) {
-        // Claim the slot before awaiting so a concurrent request cannot start the hooks twice.
-        session.startContext = []
-        if (hasHooks(state.plugins, "SessionStart") && !(await isChild(event.sessionID))) {
+        // Share one promise so concurrent requests await the same run
+        // instead of racing: the first claims the slot, the rest join it.
+        session.startContextPromise ??= (async (): Promise<string[]> => {
+          if (!hasHooks(state.plugins, "SessionStart") || (await isChild(event.sessionID))) return []
           const source = event.messages.length > 1 ? "resume" : "startup"
           const outcome = await run(event.sessionID, {
             event: "SessionStart",
             subject: source,
             payload: { source, model: event.model.id },
           })
-          session.startContext = outcome.context
-        }
+          return outcome.context
+        })().catch((error): string[] => {
+          debug("SessionStart hooks failed", { error: String(error) })
+          return []
+        })
+        session.startContext = await session.startContextPromise
       }
       // The system prompt is rebuilt per request, so the context is added each time.
       for (const text of session.startContext)
@@ -172,6 +206,9 @@ export async function bindHooks(
     if (event.type === "session.deleted") {
       await run(sessionID, { event: "SessionEnd", payload: { reason: "other" } })
       sessions.delete(sessionID)
+      for (const [id, pending] of pendingContext) {
+        if (pending.sessionID === sessionID) pendingContext.delete(id)
+      }
       return
     }
     if (event.type !== "session.execution.succeeded") return

@@ -70,8 +70,8 @@ test("render replaces inline and fenced shell interpolation with command output"
       },
     },
   )
-  expect(seen).toEqual(["git status", '"/plugins/demo/setup.sh" --fast'])
-  expect(text).toBe('Status: <git status>\n\n<"/plugins/demo/setup.sh" --fast>\n\nDone.')
+  expect(seen).toEqual(["git status", `"/plugins/demo/setup.sh" '--fast'`])
+  expect(text).toBe(`Status: <git status>\n\n<"/plugins/demo/setup.sh" '--fast'>\n\nDone.`)
 })
 
 test("an exclamation mark glued to a word is not shell interpolation", async () => {
@@ -94,4 +94,52 @@ test("named arguments accept the space-separated frontmatter form", async () => 
     },
   )
   expect(text).toBe("Fix 123 on main")
+})
+
+test("backslash escapes keep a single argument", () => {
+  expect(parseArguments("file\\ name other")).toEqual(["file name", "other"])
+  expect(parseArguments('"a\\"b" c')).toEqual(['a"b', "c"])
+  expect(parseArguments("'a\\'b' c")).toEqual(["a'b", "c"])
+})
+
+test("argument text containing interpolation syntax is not executed", async () => {
+  let ran = false
+  const text = await renderCommand(command("Summarize: $ARGUMENTS"), "hello !`id` world", context, {
+    cwd: "/project",
+    env: {},
+    run: async () => {
+      ran = true
+      return "RAN"
+    },
+  })
+  expect(ran).toBe(false)
+  expect(text).toBe("Summarize: hello !`id` world")
+})
+
+test("ARGUMENTS suffix appended after interpolation is not executed", async () => {
+  const seen: string[] = []
+  const text = await renderCommand(command("Status: !`git status`"), "hello !`id` world", context, {
+    cwd: "/project",
+    env: {},
+    run: async (source) => {
+      seen.push(source)
+      return "ok"
+    },
+  })
+  expect(seen).toEqual(["git status"])
+  expect(text).toBe("Status: ok\n\nARGUMENTS: hello !`id` world")
+})
+
+test("arguments spliced into an existing interpolation are shell-quoted", async () => {
+  const seen: string[] = []
+  const text = await renderCommand(command("Output: !`echo $ARGUMENTS`"), "; rm -rf /", context, {
+    cwd: "/project",
+    env: {},
+    run: async (source) => {
+      seen.push(source)
+      return `<${source}>`
+    },
+  })
+  expect(seen).toEqual(["echo ';' 'rm' '-rf' '/'"])
+  expect(text).toBe("Output: <echo ';' 'rm' '-rf' '/'>")
 })

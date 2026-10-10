@@ -60,6 +60,12 @@ export interface HttpHook {
   timeout?: number
   async?: boolean
   if?: string
+  /**
+   * Environment variables visible to `${VAR}` expansion in `url` and `headers`.
+   * When absent nothing from the process environment expands, which keeps
+   * secrets out of hook definitions that did not ask for them.
+   */
+  allowedEnvVars?: string[]
 }
 
 /** Hook types the first release reads but does not run: `prompt`, `agent`, `mcp_tool`. */

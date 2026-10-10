@@ -13,6 +13,7 @@ import {
 import { addMarketplace, removeMarketplace } from "../src/store/marketplaces.ts"
 import { storePaths } from "../src/store/paths.ts"
 import { readKnownMarketplaces } from "../src/store/state.ts"
+import { resolveSource } from "../src/spec/marketplace.ts"
 import { skill, tree } from "./helpers.ts"
 
 const store = () => storePaths({ C4O_HOME: tree({}) })
@@ -162,10 +163,12 @@ test("unknown plugins and ambiguous names are explained", async () => {
   const paths = store()
   await addMarketplace(paths, { source: "directory", path: localMarketplace() })
   expect(() => resolveRef(paths, "nope")).toThrow("No known marketplace lists a plugin named nope")
-  expect(installPlugin(paths, { plugin: "nope", marketplace: "local-tools" })).rejects.toThrow(
+  await expect(installPlugin(paths, { plugin: "nope", marketplace: "local-tools" })).rejects.toThrow(
     "has no plugin named nope",
   )
-  expect(installPlugin(paths, { plugin: "x", marketplace: "missing" })).rejects.toThrow("Unknown marketplace: missing")
+  await expect(installPlugin(paths, { plugin: "x", marketplace: "missing" })).rejects.toThrow(
+    "Unknown marketplace: missing",
+  )
 })
 
 test("a marketplace added by URL is just the manifest, so only object sources install", async () => {
@@ -189,7 +192,9 @@ test("a marketplace added by URL is just the manifest, so only object sources in
     })
     expect(added.name).toBe("hosted")
     expect((await installPlugin(paths, resolveRef(paths, "remote"))).version).toBe("1.0.0")
-    expect(installPlugin(paths, resolveRef(paths, "relative"))).rejects.toThrow("has no files for the relative source")
+    await expect(installPlugin(paths, resolveRef(paths, "relative"))).rejects.toThrow(
+      "has no files for the relative source",
+    )
   } finally {
     server.stop(true)
   }
@@ -202,7 +207,167 @@ test("a plugin whose name could escape the cache directory is refused", async ()
     "p/skills/a/SKILL.md": skill("a"),
   })
   await addMarketplace(paths, { source: "directory", path: marketplace })
-  expect(installPlugin(paths, { plugin: "../../outside", marketplace: "sketchy" })).rejects.toThrow(
+  await expect(installPlugin(paths, { plugin: "../../outside", marketplace: "sketchy" })).rejects.toThrow(
     "Cannot install plugin",
   )
+})
+
+test("crafted versions '.' and '..' fall back instead of deleting cache directories", async () => {
+  for (const evil of ["..", "."]) {
+    const paths = store()
+    const plugin = gitRepo({
+      ".claude-plugin/plugin.json": { name: "evil", version: evil },
+      "skills/a/SKILL.md": skill("a"),
+    })
+    const marketplace = tree({
+      ".claude-plugin/marketplace.json": {
+        name: "evil-versions",
+        plugins: [{ name: "evil", source: { source: "url", url: plugin.url, sha: plugin.sha } }],
+      },
+    })
+    await addMarketplace(paths, { source: "directory", path: marketplace })
+    const record = await installPlugin(paths, resolveRef(paths, "evil"))
+    // The dangerous version is replaced by the commit slice, staying inside the plugin cache.
+    expect(record.version).toBe(plugin.sha.slice(0, 12))
+    const base = path.join(paths.cache, "evil-versions", "evil")
+    expect(record.installPath).toBe(path.join(base, plugin.sha.slice(0, 12)))
+    expect(existsSync(base)).toBe(true)
+    expect(existsSync(paths.cache)).toBe(true)
+    expect(existsSync(path.join(record.installPath, "skills", "a", "SKILL.md"))).toBe(true)
+  }
+})
+
+test("an entry version of '..' falls back to the commit when the manifest has none", async () => {
+  const paths = store()
+  const plugin = gitRepo({ ".claude-plugin/plugin.json": { name: "noversion" }, "skills/a/SKILL.md": skill("a") })
+  const marketplace = tree({
+    ".claude-plugin/marketplace.json": {
+      name: "evil-entry",
+      plugins: [{ name: "noversion", source: { source: "url", url: plugin.url, sha: plugin.sha }, version: ".." }],
+    },
+  })
+  await addMarketplace(paths, { source: "directory", path: marketplace })
+  const record = await installPlugin(paths, resolveRef(paths, "noversion"))
+  expect(record.version).toBe(plugin.sha.slice(0, 12))
+  expect(record.installPath).toBe(path.join(paths.cache, "evil-entry", "noversion", plugin.sha.slice(0, 12)))
+})
+
+test("git-subdir paths that escape the repository are unsupported and never installed", async () => {
+  const marketplace = { name: "probe", plugins: [] as never[] }
+  for (const evil of ["../../../etc", "/etc/passwd", "a/../../b", "a//b", "", ".", "/packages/part/"]) {
+    const resolved = resolveSource({ source: "git-subdir", url: "file:///tmp/x", path: evil }, marketplace, "/tmp")
+    expect(resolved.kind).toBe("unsupported")
+  }
+  expect(
+    resolveSource({ source: "git-subdir", url: "file:///tmp/x", path: "packages/part" }, marketplace, "/tmp"),
+  ).toMatchObject({ kind: "git", subdir: "packages/part" })
+
+  const paths = store()
+  const mono = gitRepo({ "packages/part/skills/b/SKILL.md": skill("b") })
+  const root = tree({
+    ".claude-plugin/marketplace.json": {
+      name: "traversal",
+      plugins: [{ name: "evil", source: { source: "git-subdir", url: mono.url, path: "../../../etc" } }],
+    },
+  })
+  await addMarketplace(paths, { source: "directory", path: root })
+  await expect(installPlugin(paths, resolveRef(paths, "evil"))).rejects.toThrow(/escapes|unsupported|no directory/)
+  // Nothing was copied anywhere: the unsupported source fails before any install is recorded.
+  expect(listInstalled(paths)).toEqual([])
+})
+
+test("fetchRepo rejects git option injection", async () => {
+  const { fetchRepo } = await import("../src/store/git.ts")
+  const dest = () => tree({})
+  // Flag-like refs would otherwise become `git fetch origin --upload-pack=...`.
+  for (const ref of ["--upload-pack=touch", "-evil", "--help"]) {
+    await expect(fetchRepo({ url: "https://example.com/r.git", destination: dest(), ref })).rejects.toThrow(
+      "Invalid git ref",
+    )
+  }
+  for (const sha of ["--upload-pack=touch", "-evil"]) {
+    await expect(fetchRepo({ url: "https://example.com/r.git", destination: dest(), sha })).rejects.toThrow(
+      "Invalid git sha",
+    )
+  }
+  // Characters outside the allowlist (shell metachars, whitespace, control) are refused.
+  for (const ref of ["a;b", "a|b", "$(touch)", "`touch`", "a b", "", "a~b", "a^b", "a:b"]) {
+    await expect(fetchRepo({ url: "https://example.com/r.git", destination: dest(), ref })).rejects.toThrow(
+      "Invalid git ref",
+    )
+  }
+  // Leading-dash and ext:: URLs would be parsed as options or command execution.
+  for (const url of ["-u/path", "--upload-pack=touch", "ext::sh -c touch", "EXT::sh -c touch"]) {
+    await expect(fetchRepo({ url, destination: dest() })).rejects.toThrow("Invalid git URL")
+  }
+  // Leading-dash subdirs would otherwise reach sparse-checkout.
+  await expect(fetchRepo({ url: "https://example.com/r.git", destination: dest(), subdir: "-evil" })).rejects.toThrow(
+    "subdir",
+  )
+  await expect(fetchRepo({ url: "https://example.com/r.git", destination: dest(), subdir: "/-evil/" })).rejects.toThrow(
+    "subdir",
+  )
+})
+
+test("updating a marketplace that renamed itself fails instead of leaving a stale registration", async () => {
+  const { updateMarketplace } = await import("../src/store/marketplaces.ts")
+  const { write } = await import("./helpers.ts")
+  const paths = store()
+  const root = tree({ ".claude-plugin/marketplace.json": { name: "before", plugins: [] } })
+  await addMarketplace(paths, { source: "directory", path: root })
+  write(root, { ".claude-plugin/marketplace.json": { name: "after", plugins: [] } })
+  await expect(updateMarketplace(paths, "before")).rejects.toThrow(/renamed from.*before.*after.*remove and re-add/i)
+  // The old registration survives and no stale key is left behind.
+  expect(Object.keys(readKnownMarketplaces(paths))).toEqual(["before"])
+})
+
+test("adding a marketplace under a name owned by a different source is rejected", async () => {
+  const paths = store()
+  const first = tree({ ".claude-plugin/marketplace.json": { name: "dup", plugins: [] } })
+  const second = tree({ ".claude-plugin/marketplace.json": { name: "dup", plugins: [] } })
+  await addMarketplace(paths, { source: "directory", path: first })
+  await expect(addMarketplace(paths, { source: "directory", path: second })).rejects.toThrow(
+    /already registered from a different source/,
+  )
+  expect(readKnownMarketplaces(paths)["dup"]!.installLocation).toBe(first)
+  // Re-adding the same origin is an update, not a collision.
+  await addMarketplace(paths, { source: "directory", path: first })
+  expect(readKnownMarketplaces(paths)["dup"]!.installLocation).toBe(first)
+})
+
+test("a remote add that collides with another marketplace never deletes its directory", async () => {
+  const { updateMarketplace } = await import("../src/store/marketplaces.ts")
+  const paths = store()
+  const keep = gitRepo({ ".claude-plugin/marketplace.json": { name: "keeper", plugins: [] } })
+  const added = await addMarketplace(paths, { source: "git", url: keep.url })
+  const marker = path.join(added.known.installLocation, "marker.txt")
+  const { writeFileSync } = await import("node:fs")
+  writeFileSync(marker, "original")
+  const impostor = gitRepo({ ".claude-plugin/marketplace.json": { name: "keeper", plugins: [] } })
+  await expect(addMarketplace(paths, { source: "git", url: impostor.url })).rejects.toThrow(
+    /already registered from a different source/,
+  )
+  // The neighbor's directory survived the rejected add.
+  expect(existsSync(marker)).toBe(true)
+  expect(readKnownMarketplaces(paths)["keeper"]!.installLocation).toBe(added.known.installLocation)
+
+  // A git marketplace that renames upstream fails the update without touching either name.
+  const repo = gitRepo({ ".claude-plugin/marketplace.json": { name: "shifting", plugins: [] } })
+  await addMarketplace(paths, { source: "git", url: repo.url })
+  const { execFileSync } = await import("node:child_process")
+  const { writeFileSync: write2 } = await import("node:fs")
+  write2(path.join(repo.directory, ".claude-plugin", "marketplace.json"), JSON.stringify({ name: "shifted" }))
+  execFileSync(
+    "git",
+    ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "commit", "-qam", "rename"],
+    {
+      cwd: repo.directory,
+    },
+  )
+  await expect(updateMarketplace(paths, "shifting")).rejects.toThrow(
+    /renamed from.*shifting.*shifted.*remove and re-add/i,
+  )
+  expect(Object.keys(readKnownMarketplaces(paths)).toSorted()).toContain("shifting")
+  expect(readKnownMarketplaces(paths)["shifted"]).toBeUndefined()
+  expect(existsSync(path.join(paths.marketplaces, "shifting"))).toBe(true)
 })

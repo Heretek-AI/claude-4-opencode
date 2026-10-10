@@ -59,10 +59,28 @@ export type OpencodeMcp =
 /**
  * opencode derives tool names from the server name, and model providers restrict tool names to
  * `[A-Za-z0-9_-]`, so Claude's `plugin:<plugin>:<server>` form cannot be used as is.
+ *
+ * The encoding is collision-free and keeps the plugin/server boundary unambiguous: `-` is the
+ * escape character (`-` becomes `--`, `_` becomes `-5f-`, any other character outside
+ * `[A-Za-z0-9]` becomes `-<lowercase hex codepoint>-`), so an encoded part never contains a bare
+ * `_`. Joining with a single `_` separator is therefore uniquely splittable, and the
+ * `plugin === server` single form (no separator) never collides with a joined form.
  */
+export function encodeMcpPart(value: string) {
+  let out = ""
+  for (const ch of value) {
+    if (/[A-Za-z0-9]/.test(ch)) out += ch
+    else if (ch === "-") out += "--"
+    else if (ch === "_") out += "-5f-"
+    else out += `-${ch.codePointAt(0)!.toString(16)}-`
+  }
+  return out
+}
+
 export function mcpServerName(plugin: string, server: string) {
-  const clean = (value: string) => value.replace(/[^A-Za-z0-9_-]/g, "-")
-  return plugin === server ? clean(server) : `${clean(plugin)}_${clean(server)}`
+  const encodedPlugin = encodeMcpPart(plugin)
+  const encodedServer = encodeMcpPart(server)
+  return plugin === server ? encodedServer : `${encodedPlugin}_${encodedServer}`
 }
 
 export function toMcp(server: McpServerDef, context: VarContext, env: Record<string, string | undefined>): OpencodeMcp {

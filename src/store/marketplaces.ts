@@ -23,10 +23,33 @@ export function parseMarketplaceInput(input: string, cwd: string): MarketplaceOr
   if (existsSync(local))
     return statSync(local).isFile() ? { source: "file", path: local } : { source: "directory", path: local }
   const shorthand = /^([A-Za-z0-9][\w.-]*\/[\w.-]+?)(?:\.git)?(?:[@#]([\w./-]+))?$/.exec(input)
-  if (shorthand) return { source: "github", repo: shorthand[1]!, ...(shorthand[2] ? { ref: shorthand[2] } : {}) }
+  if (shorthand) {
+    const repo = shorthand[1]!
+    const ref = shorthand[2]
+    if (repo.includes(".."))
+      throw new Error(
+        `Not a marketplace source: ${input}. Use owner/repo, a git URL, a marketplace.json URL, or a local path.`,
+      )
+    if (ref !== undefined && ref.startsWith("-"))
+      throw new Error(
+        `Not a marketplace source: ${input}. Use owner/repo, a git URL, a marketplace.json URL, or a local path.`,
+      )
+    return { source: "github", repo, ...(ref ? { ref } : {}) }
+  }
   const hash = input.lastIndexOf("#")
   const url = hash === -1 ? input : input.slice(0, hash)
   const ref = hash === -1 ? {} : { ref: input.slice(hash + 1) }
+  {
+    const trimmed = url.trimStart()
+    if (trimmed.startsWith("-") || /^ext::/i.test(trimmed))
+      throw new Error(
+        `Not a marketplace source: ${input}. Use owner/repo, a git URL, a marketplace.json URL, or a local path.`,
+      )
+    if (typeof (ref as { ref?: string }).ref === "string" && (ref as { ref: string }).ref.startsWith("-"))
+      throw new Error(
+        `Not a marketplace source: ${input}. Use owner/repo, a git URL, a marketplace.json URL, or a local path.`,
+      )
+  }
   if (/^[\w.-]+@[\w.-]+:/.test(url) || /^(ssh|git|file):\/\//.test(url)) return { source: "git", url, ...ref }
   if (/^https?:\/\//.test(url)) {
     const isGit =
@@ -129,11 +152,74 @@ export interface AddResult {
   read: MarketplaceRead
 }
 
-export async function addMarketplace(paths: StorePaths, origin: MarketplaceOrigin): Promise<AddResult> {
+/**
+ * Whether two origins identify the same marketplace. Refs are versions, not identity: the same
+ * repository at a different ref still counts as the same marketplace, so re-adding with a new
+ * ref (or updating) is allowed while a different repository under the same name is rejected.
+ */
+export function sameOrigin(a: MarketplaceOrigin, b: MarketplaceOrigin): boolean {
+  if (a.source !== b.source) return false
+  if (a.source === "github" && b.source === "github") return a.repo === b.repo
+  if (a.source === "git" && b.source === "git") return a.url === b.url
+  if (a.source === "url" && b.source === "url") return a.url === b.url
+  if (a.source === "directory" && b.source === "directory") return a.path === b.path
+  if (a.source === "file" && b.source === "file") return a.path === b.path
+  return false
+}
+
+function describeOrigin(origin: MarketplaceOrigin): string {
+  if (origin.source === "github") return `github:${origin.repo}${origin.ref ? `@${origin.ref}` : ""}`
+  if (origin.source === "git") return `${origin.url}${origin.ref ? `#${origin.ref}` : ""}`
+  if (origin.source === "url") return origin.url
+  return origin.path
+}
+
+/**
+ * Rejects a fresh `add` that would take over an existing registration from somewhere else.
+ * Re-adding the same origin (or updating the entry being updated) is allowed.
+ */
+function assertNameFree(paths: StorePaths, name: string, origin: MarketplaceOrigin, expectedName: string | undefined) {
+  const existing = readKnownMarketplaces(paths)[name]
+  if (!existing) return
+  if (expectedName !== undefined && name === expectedName) return
+  if (sameOrigin(existing.source, origin)) return
+  throw new Error(
+    `Marketplace name "${name}" is already registered from a different source (${describeOrigin(existing.source)}). Remove it first before registering ${describeOrigin(origin)} under the same name.`,
+  )
+}
+
+/**
+ * Guards the `rmSync(destination)` before a clone is moved into place: if the destination
+ * directory already belongs to a different registered marketplace, refuse to delete it.
+ */
+function assertDestinationFree(paths: StorePaths, name: string, destination: string) {
+  if (!existsSync(destination)) return
+  for (const [other, known] of Object.entries(readKnownMarketplaces(paths))) {
+    if (other !== name && known.installLocation === destination)
+      throw new Error(
+        `Cannot install marketplace "${name}" to ${destination}: it belongs to marketplace "${other}". Remove "${other}" first.`,
+      )
+  }
+}
+
+function assertNoRename(expected: string | undefined, actual: string) {
+  if (expected !== undefined && actual !== expected)
+    throw new Error(`marketplace renamed from "${expected}" to "${actual}", remove and re-add instead of updating`)
+}
+
+export async function addMarketplace(
+  paths: StorePaths,
+  origin: MarketplaceOrigin,
+  options: { expectedName?: string } = {},
+): Promise<AddResult> {
+  const expected = options.expectedName
   if (origin.source === "directory" || origin.source === "file") {
     // Local marketplaces are used in place, so edits to them show up without a re-add.
     const read = requireMarketplace(readMarketplace(origin.path))
-    assertNameAllowed(read.marketplace!.name, origin)
+    const name = read.marketplace!.name
+    assertNameAllowed(name, origin)
+    assertNoRename(expected, name)
+    assertNameFree(paths, name, origin, expected)
     return register(paths, read, {
       source: origin,
       installLocation: origin.path,
@@ -147,7 +233,10 @@ export async function addMarketplace(paths: StorePaths, origin: MarketplaceOrigi
       origin.source === "url" ? await downloadManifest(origin.url, staging) : await cloneMarketplace(origin, staging)
     const name = requireMarketplace(readMarketplace(staging)).marketplace!.name
     assertNameAllowed(name, origin)
+    assertNoRename(expected, name)
+    assertNameFree(paths, name, origin, expected)
     const destination = path.join(paths.marketplaces, name)
+    assertDestinationFree(paths, name, destination)
     rmSync(destination, { recursive: true, force: true })
     renameSync(staging, destination)
     return register(paths, requireMarketplace(readMarketplace(destination)), {
@@ -193,7 +282,7 @@ function register(paths: StorePaths, read: MarketplaceRead, known: KnownMarketpl
 export function updateMarketplace(paths: StorePaths, name: string): Promise<AddResult> {
   const known = readKnownMarketplaces(paths)[name]
   if (!known) throw new Error(`Unknown marketplace: ${name}`)
-  return addMarketplace(paths, known.source)
+  return addMarketplace(paths, known.source, { expectedName: name })
 }
 
 export function removeMarketplace(paths: StorePaths, name: string) {

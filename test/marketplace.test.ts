@@ -92,9 +92,9 @@ test("reserved marketplace names are only accepted from the anthropics GitHub or
   const { addMarketplace } = await import("../src/store/marketplaces.ts")
   const { storePaths } = await import("../src/store/paths.ts")
   const impostor = tree({ ".claude-plugin/marketplace.json": { name: "claude-plugins-official", plugins: [] } })
-  expect(addMarketplace(storePaths({ C4O_HOME: tree({}) }), { source: "directory", path: impostor })).rejects.toThrow(
-    "reserved for official Anthropic marketplaces",
-  )
+  await expect(
+    addMarketplace(storePaths({ C4O_HOME: tree({}) }), { source: "directory", path: impostor }),
+  ).rejects.toThrow("reserved for official Anthropic marketplaces")
 })
 
 test("http(s) URLs are git repositories when they look like one, otherwise a marketplace.json link", () => {
@@ -128,4 +128,32 @@ test("marketplace names follow Claude Code's rules", async () => {
   // Names with a meaning of their own, and members of every JavaScript object.
   for (const name of ["inline", "builtin", "NPM", "constructor", "toString", "claudeai-team"])
     expect(() => assertNameAllowed(name, local)).toThrow("is reserved and cannot be registered")
+})
+
+test("malicious marketplace inputs are rejected", () => {
+  // Shorthand ref starting with `-` would be parsed as a git flag (e.g. --upload-pack).
+  for (const input of [
+    "owner/repo@--upload-pack",
+    "owner/repo@--upload-pack=touch",
+    "owner/repo@-evil",
+    "owner/repo#--upload-pack",
+    "owner/repo#--upload-pack=x",
+  ]) {
+    expect(() => parseMarketplaceInput(input, "/nowhere")).toThrow("Not a marketplace source")
+  }
+  // Repos containing `..` must not be accepted as shorthand.
+  for (const input of ["owner/a..b", "owner/..", "owner/...."]) {
+    expect(() => parseMarketplaceInput(input, "/nowhere")).toThrow("Not a marketplace source")
+  }
+  // URLs starting with `-` would be parsed as git options by `remote add` / `fetch`.
+  expect(() => parseMarketplaceInput("-evil", "/nowhere")).toThrow("Not a marketplace source")
+  expect(() => parseMarketplaceInput("--upload-pack=touch", "/nowhere")).toThrow("Not a marketplace source")
+  // ext:: URLs execute arbitrary commands via git's ext transport.
+  for (const input of ["ext::sh -c touch", "EXT::sh -c touch", "  ext::sh -c touch"]) {
+    expect(() => parseMarketplaceInput(input, "/nowhere")).toThrow("Not a marketplace source")
+  }
+  // A git URL with a flag-like ref is rejected too.
+  expect(() => parseMarketplaceInput("https://github.com/acme/tools.git#--upload-pack=x", "/nowhere")).toThrow(
+    "Not a marketplace source",
+  )
 })

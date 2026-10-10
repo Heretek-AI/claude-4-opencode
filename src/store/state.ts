@@ -50,7 +50,10 @@ function readJson(file: string): unknown {
 /** Writes through a temporary file so a reader never sees a half-written state file. */
 function writeJson(file: string, value: unknown) {
   mkdirSync(path.dirname(file), { recursive: true })
-  const temporary = `${file}.${process.pid}.tmp`
+  // Unique per write so concurrent writers in this process do not clobber each other's
+  // temporary file. Read-modify-write races can still lose an update; callers below
+  // re-read before writing and tolerate that last-writer-wins loss for independent updates.
+  const temporary = `${file}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`
   writeFileSync(temporary, JSON.stringify(value, null, 2) + "\n")
   renameSync(temporary, file)
 }
@@ -61,6 +64,8 @@ export function readKnownMarketplaces(paths: StorePaths): Record<string, KnownMa
 }
 
 export function writeKnownMarketplaces(paths: StorePaths, value: Record<string, KnownMarketplace>) {
+  // Concurrent read-modify-write can lose an update (last-writer-wins); independent
+  // marketplace registrations tolerate that and can be re-added.
   writeJson(paths.knownMarketplaces, value)
 }
 
@@ -71,6 +76,8 @@ export function readInstalled(paths: StorePaths): InstalledFile {
 }
 
 export function writeInstalled(paths: StorePaths, value: InstalledFile) {
+  // Concurrent read-modify-write can lose an update (last-writer-wins); independent
+  // plugin installs tolerate that and can be re-installed.
   writeJson(paths.installed, value)
 }
 

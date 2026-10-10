@@ -9,10 +9,25 @@ export function parseArguments(input: string): string[] {
   let current = ""
   let quote: string | undefined
   let started = false
-  for (const char of input) {
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i]!
     if (quote) {
+      // Backslash escapes the quote character and backslash itself inside quotes.
+      if (char === "\\" && i + 1 < input.length && (input[i + 1] === quote || input[i + 1] === "\\")) {
+        current += input[i + 1]!
+        i++
+        started = true
+        continue
+      }
       if (char === quote) quote = undefined
       else current += char
+      continue
+    }
+    // Outside quotes a backslash escapes the next character (e.g. `file\ name`).
+    if (char === "\\" && i + 1 < input.length) {
+      current += input[i + 1]!
+      i++
+      started = true
       continue
     }
     if (char === '"' || char === "'") {
@@ -32,6 +47,40 @@ export function parseArguments(input: string): string[] {
   return result
 }
 
+/** Shell-quotes a single value so it can be spliced safely into `bash -c` text. */
+function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, "'\\''")}'`
+}
+
+function replacePlaceholders(
+  template: string,
+  args: string[],
+  input: string,
+  names: string[],
+  quote: boolean,
+): { text: string; found: boolean } {
+  const named = new Map(names.map((name, index) => [name, index]))
+  const positional = args.length === 0 ? "" : "|\\$(\\d+)(?!\\w)"
+  const namePattern =
+    names.length === 0 || args.length === 0 ? "" : `|\\$(${names.map(escapeRegExp).join("|")})(?![\\[\\w])`
+  // One pass, so argument text that itself contains a placeholder is never expanded again.
+  const pattern = new RegExp(`\\$ARGUMENTS\\[(\\d+)\\]|\\$ARGUMENTS${positional}${namePattern}`, "g")
+  let found = false
+  const text = template.replace(pattern, (whole, indexed?: string, shorthand?: string, name?: string) => {
+    found = true
+    if (whole === "$ARGUMENTS") {
+      if (!quote) return input
+      return args.length === 0 ? "" : args.map(shellQuote).join(" ")
+    }
+    const index =
+      indexed !== undefined ? Number(indexed) : shorthand !== undefined ? Number(shorthand) : named.get(name!)!
+    const value = args[index] ?? ""
+    if (!quote) return value
+    return args[index] === undefined ? "" : shellQuote(value)
+  })
+  return { text, found }
+}
+
 /**
  * Fills `$ARGUMENTS`, `$ARGUMENTS[N]`, `$N` (both 0-based) and named arguments declared in the
  * `arguments` frontmatter. A template with no placeholder gets the arguments appended.
@@ -42,20 +91,7 @@ export function parseArguments(input: string): string[] {
  */
 export function substituteArguments(template: string, input: string, names: string[] = []): string {
   const args = parseArguments(input)
-  const named = new Map(names.map((name, index) => [name, index]))
-  const positional = args.length === 0 ? "" : "|\\$(\\d+)(?!\\w)"
-  const namePattern =
-    names.length === 0 || args.length === 0 ? "" : `|\\$(${names.map(escapeRegExp).join("|")})(?![\\[\\w])`
-  // One pass, so argument text that itself contains a placeholder is never expanded again.
-  const pattern = new RegExp(`\\$ARGUMENTS\\[(\\d+)\\]|\\$ARGUMENTS${positional}${namePattern}`, "g")
-  let found = false
-  const result = template.replace(pattern, (whole, indexed?: string, shorthand?: string, name?: string) => {
-    found = true
-    if (whole === "$ARGUMENTS") return input
-    const index =
-      indexed !== undefined ? Number(indexed) : shorthand !== undefined ? Number(shorthand) : named.get(name!)!
-    return args[index] ?? ""
-  })
+  const { text: result, found } = replacePlaceholders(template, args, input, names, false)
   return found || input.trim() === "" ? result : `${result}\n\nARGUMENTS: ${input}`
 }
 
@@ -94,8 +130,11 @@ export interface RenderOptions {
 }
 
 /**
- * Renders a command body into the prompt text: path variables, then arguments, then shell
- * interpolation, whose output replaces the placeholder as it does in Claude Code.
+ * Renders a command body into the prompt text: path variables, then shell interpolation
+ * detection (before argument substitution, so user input can never inject `!`...``),
+ * then arguments (raw in prose, shell-quoted inside interpolations), whose output
+ * replaces the placeholder as it does in Claude Code. The `ARGUMENTS:` suffix is
+ * appended after splicing outputs so it is never scanned for interpolation.
  */
 export async function renderCommand(
   command: CommandDef,
@@ -105,19 +144,34 @@ export async function renderCommand(
 ): Promise<string> {
   const names = asStringList(command.frontmatter.arguments) ?? []
   const argumentNames = names.length === 1 ? names[0]!.split(/\s+/).filter(Boolean) : names
-  const text = substituteArguments(substitute(command.body, context), input, argumentNames).trim()
-  const interpolations = findInterpolations(text)
-  if (interpolations.length === 0) return text
-  const run = options.run ?? runShell
-  const env = { ...options.env, ...pluginEnvironment(context) }
-  const outputs = await Promise.all(interpolations.map((item) => run(item.source, { cwd: options.cwd, env })))
-  let result = ""
+  const base = substitute(command.body, context)
+  const interpolations = findInterpolations(base)
+  if (interpolations.length === 0) return substituteArguments(base, input, argumentNames).trim()
+  const args = parseArguments(input)
+  let found = false
+  const textParts: string[] = []
+  const shellSources: string[] = []
   let cursor = 0
-  for (const [index, item] of interpolations.entries()) {
-    result += text.slice(cursor, item.start) + outputs[index]
+  for (const item of interpolations) {
+    const head = replacePlaceholders(base.slice(cursor, item.start), args, input, argumentNames, false)
+    found ||= head.found
+    textParts.push(head.text)
+    const source = replacePlaceholders(item.source, args, input, argumentNames, true)
+    found ||= source.found
+    shellSources.push(source.text)
     cursor = item.end
   }
-  return result + text.slice(cursor)
+  const tail = replacePlaceholders(base.slice(cursor), args, input, argumentNames, false)
+  found ||= tail.found
+  textParts.push(tail.text)
+  const run = options.run ?? runShell
+  const env = { ...options.env, ...pluginEnvironment(context) }
+  const outputs = await Promise.all(shellSources.map((source) => run(source, { cwd: options.cwd, env })))
+  let result = ""
+  for (const [index, output] of outputs.entries()) result += textParts[index]! + output
+  result += textParts[textParts.length - 1]!
+  if (!found && input.trim() !== "") result += `\n\nARGUMENTS: ${input}`
+  return result.trim()
 }
 
 function runShell(command: string, options: { cwd: string; env: Record<string, string | undefined> }): Promise<string> {

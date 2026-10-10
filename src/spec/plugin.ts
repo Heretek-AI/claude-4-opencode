@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs"
+import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, type Dirent } from "node:fs"
 import path from "node:path"
 import { asBoolean, asString, asStringList, isRecord, parseMarkdown } from "./frontmatter.ts"
 import type {
@@ -66,7 +66,7 @@ export function loadPlugin(options: LoadOptions): LoadedPlugin {
   for (const directory of skillPaths) loadSkillsFrom(directory, context, skills)
   if (skills.size === 0 && skillPaths.length === 0 && !isDirectory(defaultSkills)) {
     const rootSkill = path.join(root, "SKILL.md")
-    if (existsSync(rootSkill)) addSkill(rootSkill, `${name}:${name}`, context, skills)
+    if (existsSync(rootSkill) && isFile(rootSkill)) addSkill(rootSkill, `${name}:${name}`, context, skills)
   }
 
   const commandDecls = declaredOrEntry("commands")
@@ -85,7 +85,8 @@ export function loadPlugin(options: LoadOptions): LoadedPlugin {
   for (const value of agentDecls) {
     for (const target of pathList(value, context, "agents")) {
       if (isDirectory(target)) loadAgentsFrom(target, target, context, agents)
-      else addAgent(target, [], context, agents)
+      else if (isFile(target)) addAgent(target, [], context, agents)
+      else context.issues.push({ level: "error", message: `agents path is not a file: ${target}`, path: target })
     }
   }
 
@@ -163,7 +164,35 @@ function readJson(file: string, context: Context): unknown {
 }
 
 function isDirectory(target: string) {
-  return existsSync(target) && statSync(target).isDirectory()
+  try {
+    return lstatSync(target).isDirectory()
+  } catch {
+    return false
+  }
+}
+
+function isFile(target: string) {
+  try {
+    return lstatSync(target).isFile()
+  } catch {
+    return false
+  }
+}
+
+function realpathOrUndefined(target: string): string | undefined {
+  try {
+    return realpathSync(target)
+  } catch {
+    return undefined
+  }
+}
+
+/** True when the resolved path escapes the plugin root once symlinks are resolved. */
+function escapesRoot(target: string, root: string): boolean {
+  const realRoot = realpathOrUndefined(root)
+  const realTarget = realpathOrUndefined(target)
+  if (realRoot === undefined || realTarget === undefined) return false
+  return realTarget !== realRoot && !realTarget.startsWith(realRoot + path.sep)
 }
 
 /** Resolves a manifest path, enforcing that it stays inside the plugin root and exists. */
@@ -176,6 +205,10 @@ function inside(relative: string, context: Context, component: string): string |
   }
   if (!existsSync(resolved)) {
     context.issues.push({ level: "error", message: `${component} path not found: ${relative}` })
+    return undefined
+  }
+  if (escapesRoot(resolved, context.root)) {
+    context.issues.push({ level: "error", message: `${component} path escapes plugin directory: ${relative}` })
     return undefined
   }
   return resolved
@@ -194,27 +227,81 @@ function pathList(value: unknown, context: Context, component: string): string[]
 }
 
 function markdownFiles(directory: string): string[] {
-  return readdirSync(directory, { withFileTypes: true })
+  try {
+    if (!lstatSync(directory).isDirectory()) return []
+  } catch {
+    return []
+  }
+  let entries: Dirent<string>[]
+  try {
+    entries = readdirSync(directory, { withFileTypes: true })
+  } catch {
+    return []
+  }
+  return entries
     .toSorted((a, b) => a.name.localeCompare(b.name))
     .flatMap((entry) => {
+      if (entry.isSymbolicLink()) return []
       const target = path.join(directory, entry.name)
-      if (isDirectory(target)) return markdownFiles(target)
+      if (entry.isDirectory()) return markdownFiles(target)
+      if (!entry.isFile()) return []
       return entry.name.toLowerCase().endsWith(".md") ? [target] : []
     })
 }
 
-function loadSkillsFrom(directory: string, context: Context, skills: Map<string, SkillDef>) {
-  const direct = path.join(directory, "SKILL.md")
-  if (existsSync(direct)) {
-    const leaf = directory === context.root ? context.name : path.basename(directory)
+function loadSkillsFrom(target: string, context: Context, skills: Map<string, SkillDef>) {
+  let stat: ReturnType<typeof lstatSync>
+  try {
+    stat = lstatSync(target)
+  } catch {
+    context.issues.push({ level: "error", message: `skills path not found: ${target}`, path: target })
+    return
+  }
+  if (stat.isSymbolicLink()) return
+  if (stat.isFile()) {
+    if (target.toLowerCase().endsWith("skill.md")) {
+      if (escapesRoot(target, context.root)) {
+        context.issues.push({
+          level: "error",
+          message: `skills path escapes plugin directory: ${target}`,
+          path: target,
+        })
+        return
+      }
+      const parent = path.dirname(target)
+      const leaf = parent === context.root ? context.name : path.basename(parent)
+      addSkill(target, `${context.name}:${leaf}`, context, skills)
+    } else {
+      context.issues.push({ level: "error", message: `skills path is not a skill directory: ${target}`, path: target })
+    }
+    return
+  }
+  if (!stat.isDirectory()) {
+    context.issues.push({ level: "error", message: `skills path is not a directory: ${target}`, path: target })
+    return
+  }
+  if (escapesRoot(target, context.root)) {
+    context.issues.push({ level: "error", message: `skills path escapes plugin directory: ${target}`, path: target })
+    return
+  }
+  const direct = path.join(target, "SKILL.md")
+  if (existsSync(direct) && isFile(direct)) {
+    const leaf = target === context.root ? context.name : path.basename(target)
     addSkill(direct, `${context.name}:${leaf}`, context, skills)
     return
   }
-  for (const entry of readdirSync(directory, { withFileTypes: true }).toSorted((a, b) =>
-    a.name.localeCompare(b.name),
-  )) {
-    const file = path.join(directory, entry.name, "SKILL.md")
-    if (existsSync(file)) addSkill(file, `${context.name}:${entry.name}`, context, skills)
+  let entries: Dirent<string>[]
+  try {
+    entries = readdirSync(target, { withFileTypes: true }).toSorted((a, b) => a.name.localeCompare(b.name))
+  } catch {
+    context.issues.push({ level: "error", message: `skills directory cannot be read: ${target}`, path: target })
+    return
+  }
+  for (const entry of entries) {
+    if (entry.isSymbolicLink()) continue
+    if (!entry.isDirectory()) continue
+    const file = path.join(target, entry.name, "SKILL.md")
+    if (existsSync(file) && isFile(file)) addSkill(file, `${context.name}:${entry.name}`, context, skills)
   }
 }
 
@@ -247,20 +334,72 @@ function loadCommandsFrom(
   commands: Map<string, CommandDef>,
   skills: Map<string, SkillDef>,
 ) {
-  // A directory holding SKILL.md under commands/ is a skill named by that directory.
-  if (existsSync(path.join(directory, "SKILL.md")) && directory !== base) {
-    const segments = path.relative(base, directory).split(path.sep)
-    addSkill(path.join(directory, "SKILL.md"), [context.name, ...segments].join(":"), context, skills)
+  let stat: ReturnType<typeof lstatSync>
+  try {
+    stat = lstatSync(directory)
+  } catch {
+    context.issues.push({ level: "error", message: `commands path not found: ${directory}`, path: directory })
     return
   }
-  for (const entry of readdirSync(directory, { withFileTypes: true }).toSorted((a, b) =>
-    a.name.localeCompare(b.name),
-  )) {
+  if (stat.isSymbolicLink()) return
+  if (stat.isFile()) {
+    if (!directory.toLowerCase().endsWith(".md")) {
+      context.issues.push({
+        level: "error",
+        message: `commands path is not a Markdown file: ${directory}`,
+        path: directory,
+      })
+      return
+    }
+    if (escapesRoot(directory, context.root)) {
+      context.issues.push({
+        level: "error",
+        message: `commands path escapes plugin directory: ${directory}`,
+        path: directory,
+      })
+      return
+    }
+    const id =
+      directory === base
+        ? `${context.name}:${path.basename(directory).replace(/\.md$/i, "")}`
+        : [context.name, ...path.relative(base, directory).replace(/\.md$/i, "").split(path.sep)].join(":")
+    addCommand(id, readFileSync(directory, "utf8"), directory, {}, commands)
+    return
+  }
+  if (!stat.isDirectory()) {
+    context.issues.push({ level: "error", message: `commands path is not a directory: ${directory}`, path: directory })
+    return
+  }
+  if (escapesRoot(directory, context.root)) {
+    context.issues.push({
+      level: "error",
+      message: `commands path escapes plugin directory: ${directory}`,
+      path: directory,
+    })
+    return
+  }
+  // A directory holding SKILL.md under commands/ is a skill named by that directory.
+  const skillFile = path.join(directory, "SKILL.md")
+  if (directory !== base && existsSync(skillFile) && isFile(skillFile)) {
+    const segments = path.relative(base, directory).split(path.sep)
+    addSkill(skillFile, [context.name, ...segments].join(":"), context, skills)
+    return
+  }
+  let entries: Dirent<string>[]
+  try {
+    entries = readdirSync(directory, { withFileTypes: true }).toSorted((a, b) => a.name.localeCompare(b.name))
+  } catch {
+    context.issues.push({ level: "error", message: `commands directory cannot be read: ${directory}`, path: directory })
+    return
+  }
+  for (const entry of entries) {
+    if (entry.isSymbolicLink()) continue
     const target = path.join(directory, entry.name)
-    if (isDirectory(target)) {
+    if (entry.isDirectory()) {
       loadCommandsFrom(target, base, context, commands, skills)
       continue
     }
+    if (!entry.isFile()) continue
     if (!entry.name.toLowerCase().endsWith(".md")) continue
     const segments = path.relative(base, target).replace(/\.md$/i, "").split(path.sep)
     addCommand([context.name, ...segments].join(":"), readFileSync(target, "utf8"), target, {}, commands)
@@ -292,6 +431,10 @@ function loadDeclaredCommands(
   for (const target of pathList(value, context, "commands")) {
     if (isDirectory(target)) {
       loadCommandsFrom(target, target, context, commands, skills)
+      continue
+    }
+    if (!isFile(target)) {
+      context.issues.push({ level: "error", message: `commands path is not a file: ${target}`, path: target })
       continue
     }
     addCommand(
@@ -335,6 +478,45 @@ function hintText(value: unknown): string | undefined {
 }
 
 function loadAgentsFrom(directory: string, base: string, context: Context, agents: Map<string, AgentDef>) {
+  let stat: ReturnType<typeof lstatSync>
+  try {
+    stat = lstatSync(directory)
+  } catch {
+    context.issues.push({ level: "error", message: `agents path not found: ${directory}`, path: directory })
+    return
+  }
+  if (stat.isSymbolicLink()) return
+  if (stat.isFile()) {
+    if (escapesRoot(directory, context.root)) {
+      context.issues.push({
+        level: "error",
+        message: `agents path escapes plugin directory: ${directory}`,
+        path: directory,
+      })
+      return
+    }
+    const segments =
+      directory === base
+        ? []
+        : path
+            .relative(base, path.dirname(directory))
+            .split(path.sep)
+            .filter((item) => item !== "")
+    addAgent(directory, segments, context, agents)
+    return
+  }
+  if (!stat.isDirectory()) {
+    context.issues.push({ level: "error", message: `agents path is not a directory: ${directory}`, path: directory })
+    return
+  }
+  if (escapesRoot(directory, context.root)) {
+    context.issues.push({
+      level: "error",
+      message: `agents path escapes plugin directory: ${directory}`,
+      path: directory,
+    })
+    return
+  }
   for (const file of markdownFiles(directory)) {
     const segments = path
       .relative(base, path.dirname(file))

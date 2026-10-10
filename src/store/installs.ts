@@ -3,6 +3,7 @@ import path from "node:path"
 import { resolveSource } from "../spec/marketplace.ts"
 import { loadPlugin, readManifest } from "../spec/plugin.ts"
 import { asString } from "../spec/frontmatter.ts"
+import { debug } from "../runtime/debug.ts"
 import type { LoadedPlugin, MarketplaceEntry } from "../spec/types.ts"
 import { fetchRepo } from "./git.ts"
 import { isValidIdPart, loadKnownMarketplace } from "./marketplaces.ts"
@@ -82,11 +83,25 @@ export async function installPlugin(paths: StorePaths, ref: PluginRef): Promise<
         cpSync(source.directory, staging, { recursive: true, filter: (item) => path.basename(item) !== ".git" })
       } else {
         sha = await fetchRepo({ ...source, destination: staging })
-        if (source.subdir) content = path.join(staging, source.subdir)
+        if (source.subdir) {
+          if (path.isAbsolute(source.subdir))
+            throw new Error(`Repository ${source.url} has an absolute directory ${source.subdir}`)
+          content = path.join(staging, source.subdir)
+          const offset = path.relative(staging, content)
+          if (offset === "" || isEscapeOffset(offset))
+            throw new Error(`Repository ${source.url} has a directory that escapes the checkout: ${source.subdir}`)
+        }
         if (!existsSync(content)) throw new Error(`Repository ${source.url} has no directory ${source.subdir}`)
       }
-      const version = versionOf(content, entry, sha)
-      const installPath = path.join(base, version)
+      let version = versionOf(content, entry, sha)
+      let installPath = path.join(base, version)
+      // versionOf sanitizes, but never let a crafted version delete outside the plugin cache.
+      if (isOutsideOrSame(base, installPath)) {
+        version = sha?.slice(0, 12) ?? "unknown"
+        installPath = path.join(base, version)
+        if (isOutsideOrSame(base, installPath))
+          throw new Error(`Refusing to install ${formatId(ref)}: unsafe version ${JSON.stringify(version)}`)
+      }
       rmSync(installPath, { recursive: true, force: true })
       if (content === staging) renameSync(staging, installPath)
       else cpSync(content, installPath, { recursive: true })
@@ -123,9 +138,20 @@ export async function installPlugin(paths: StorePaths, ref: PluginRef): Promise<
 
 /** Manifest version wins over the entry's; without either, the commit identifies the version. */
 function versionOf(directory: string, entry: MarketplaceEntry, sha: string | undefined) {
-  const version =
+  const raw =
     asString(readManifest(directory, [])?.version) ?? asString(entry.version) ?? sha?.slice(0, 12) ?? "unknown"
-  return version.replace(/[^A-Za-z0-9._+-]/g, "-")
+  const version = raw.replace(/[^A-Za-z0-9._+-]/g, "-")
+  // `.` and `..` would make path.join(base, version) delete the plugin dir or marketplace dir.
+  if (
+    version === "" ||
+    version === "." ||
+    version === ".." ||
+    path.isAbsolute(version) ||
+    version.includes("/") ||
+    version.includes("\\")
+  )
+    return sha?.slice(0, 12) ?? "unknown"
+  return version
 }
 
 export function uninstallPlugin(paths: StorePaths, ref: PluginRef, options: { keepData?: boolean } = {}) {
@@ -149,6 +175,23 @@ export function uninstallPlugin(paths: StorePaths, ref: PluginRef, options: { ke
 function isInside(parent: string, child: string) {
   const offset = path.relative(parent, child)
   return offset !== "" && !offset.startsWith("..") && !path.isAbsolute(offset)
+}
+
+/** True when joining an untrusted segment escapes `parent` (or collapses onto it). */
+function isOutsideOrSame(parent: string, child: string) {
+  const offset = path.relative(parent, child)
+  return offset === "" || isEscapeOffset(offset)
+}
+
+/** `...` lives inside its parent; only `..` and `../...` escape. */
+function isEscapeOffset(offset: string) {
+  return (
+    offset === ".." ||
+    offset.startsWith(`..${path.sep}`) ||
+    offset.startsWith("../") ||
+    offset.startsWith("..\\") ||
+    path.isAbsolute(offset)
+  )
 }
 
 export function setEnabled(paths: StorePaths, ref: PluginRef, enabled: boolean) {
@@ -187,25 +230,38 @@ export interface ActiveOptions {
 
 export function loadActivePlugins(paths: StorePaths, options: ActiveOptions = {}): ActivePlugin[] {
   const settings = readSettings(paths)
-  const fromStore = listInstalled(paths)
-    .filter((item) => item.enabled && existsSync(item.record.installPath))
-    .map((item): ActivePlugin => ({
-      id: item.id,
-      plugin: loadPlugin({
-        root: item.record.installPath,
-        ...(item.record.entry === undefined ? {} : { entry: item.record.entry }),
-        ...(item.record.isMarketplaceRoot ? { entryIsMarketplaceRoot: true } : {}),
-      }),
-      dataDir: dataDirectory(paths, item.id),
-      options: settings.pluginConfigs[item.id]?.options ?? {},
-    }))
-  const fromDirs = (options.pluginDirs ?? [])
-    .filter((directory) => existsSync(directory))
-    .map((directory): ActivePlugin => {
+  const fromStore: ActivePlugin[] = []
+  for (const item of listInstalled(paths).filter((item) => item.enabled && existsSync(item.record.installPath))) {
+    try {
+      fromStore.push({
+        id: item.id,
+        plugin: loadPlugin({
+          root: item.record.installPath,
+          ...(item.record.entry === undefined ? {} : { entry: item.record.entry }),
+          ...(item.record.isMarketplaceRoot ? { entryIsMarketplaceRoot: true } : {}),
+        }),
+        dataDir: dataDirectory(paths, item.id),
+        options: settings.pluginConfigs[item.id]?.options ?? {},
+      })
+    } catch (error) {
+      debug("loadActivePlugins failed", { id: item.id, error: String(error) })
+    }
+  }
+  const fromDirs: ActivePlugin[] = []
+  for (const directory of (options.pluginDirs ?? []).filter((directory) => existsSync(directory))) {
+    try {
       const plugin = loadPlugin({ root: directory })
       const id = `${plugin.name}@inline`
-      return { id, plugin, dataDir: dataDirectory(paths, id), options: settings.pluginConfigs[id]?.options ?? {} }
-    })
+      fromDirs.push({
+        id,
+        plugin,
+        dataDir: dataDirectory(paths, id),
+        options: settings.pluginConfigs[id]?.options ?? {},
+      })
+    } catch (error) {
+      debug("loadActivePlugins failed", { directory, error: String(error) })
+    }
+  }
   // A directory passed explicitly overrides an installed plugin of the same name.
   const names = new Set(fromDirs.map((item) => item.plugin.name))
   return [...fromStore.filter((item) => !names.has(item.plugin.name)), ...fromDirs]

@@ -1,8 +1,16 @@
 import { expect, test } from "bun:test"
-import { readFileSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
+import { createServer } from "node:http"
 import path from "node:path"
 import { loadPlugin } from "../src/spec/plugin.ts"
-import { conditionMatches, interpret, matcherMatches, runHooks } from "../src/runtime/hooks/engine.ts"
+import { bindHooks } from "../src/runtime/hooks/bind.ts"
+import {
+  conditionMatches,
+  hasMatchingHandler,
+  interpret,
+  matcherMatches,
+  runHooks,
+} from "../src/runtime/hooks/engine.ts"
 import { transcriptLines } from "../src/runtime/hooks/transcript.ts"
 import type { ActivePlugin } from "../src/store/installs.ts"
 import { tree } from "./helpers.ts"
@@ -192,7 +200,19 @@ test("a handler that outlives its timeout is killed and does not block", async (
   expect(Date.now() - started).toBeLessThan(3000)
 })
 
-test("async handlers run in the background and cannot block", async () => {
+test("a timed-out handler kills its whole process group, not just the direct child", async () => {
+  const plugin = pluginWithHooks({
+    PreToolUse: [command("(sleep 0.6; echo survived > groupkill.marker) & sleep 10", { timeout: 0.2 })],
+  })
+  const root = plugin.plugin.root
+  const outcome = await runHooks([plugin], { event: "PreToolUse", subject: "Bash", payload: {} }, session(root))
+  expect(outcome.blocked).toBeUndefined()
+  // Give the background grandchild time to write if it survived the kill.
+  await new Promise((resolve) => setTimeout(resolve, 1200))
+  expect(existsSync(path.join(root, "groupkill.marker"))).toBe(false)
+})
+
+test("async handlers are skipped before spawning and cannot block", async () => {
   const plugin = pluginWithHooks({ PostToolUse: [command("exit 2", { async: true })] })
   const outcome = await runHooks(
     [plugin],
@@ -233,4 +253,200 @@ test("transcripts use Claude Code's JSONL shape, one content block per line", ()
   ])
   // Hooks such as ralph-loop grep for this exact, unspaced form.
   expect(JSON.stringify(lines[1])).toContain('"role":"assistant"')
+})
+
+/** Minimal opencode plugin context: captures hook callbacks so tests can invoke them directly. */
+function mockCtx() {
+  const toolHooks = new Map<string, (event: any) => Promise<void>>()
+  const sessionHooks = new Map<string, (event: any) => Promise<void>>()
+  let contextCalls = 0
+  const ctx = {
+    tool: {
+      hook: async (name: string, callback: (event: any) => Promise<void>) => {
+        toolHooks.set(name, callback)
+        return { dispose() {} }
+      },
+    },
+    session: {
+      hook: async (name: string, callback: (event: any) => Promise<void>) => {
+        sessionHooks.set(name, callback)
+        return { dispose() {} }
+      },
+      get: async () => ({}),
+      context: async () => {
+        contextCalls += 1
+        return []
+      },
+      prompt: async () => {},
+    },
+    event: {
+      subscribe: async () => (async function* () {})(),
+    },
+  }
+  return { ctx: ctx as any, toolHooks, sessionHooks, contextCalls: () => contextCalls }
+}
+
+const bindOptions = (root: string) => ({ projectDir: root, transcripts: path.join(root, "transcripts") })
+
+test("failure-hook feedback is appended to the tool error the model sees", async () => {
+  const plugin = pluginWithHooks({
+    PostToolUseFailure: [
+      command(
+        `echo '{"decision":"block","reason":"failure blocked","hookSpecificOutput":{"additionalContext":"failure note"}}'`,
+      ),
+    ],
+  })
+  const { ctx, toolHooks } = mockCtx()
+  const dispose = await bindHooks(ctx, { plugins: [plugin] }, bindOptions(plugin.plugin.root))
+  try {
+    const after = toolHooks.get("execute.after")!
+    const event: any = {
+      tool: "shell",
+      sessionID: "ses_1",
+      agent: "agent_1",
+      messageID: "msg_1",
+      id: "call_1",
+      input: { command: "ls" },
+      status: "error",
+      error: { message: "boom" },
+    }
+    await after(event)
+    expect(event.error.message).toContain("boom")
+    expect(event.error.message).toContain("failure note")
+    expect(event.error.message).toContain("failure blocked")
+  } finally {
+    dispose()
+  }
+})
+
+test("completed-tool feedback still lands on the result content", async () => {
+  const plugin = pluginWithHooks({
+    PostToolUse: [command(`echo '{"hookSpecificOutput":{"additionalContext":"post note"}}'`)],
+  })
+  const { ctx, toolHooks } = mockCtx()
+  const dispose = await bindHooks(ctx, { plugins: [plugin] }, bindOptions(plugin.plugin.root))
+  try {
+    const after = toolHooks.get("execute.after")!
+    const event: any = {
+      tool: "shell",
+      sessionID: "ses_1",
+      agent: "agent_1",
+      messageID: "msg_1",
+      id: "call_1",
+      input: { command: "ls" },
+      status: "completed",
+      result: { output: "ok" },
+    }
+    await after(event)
+    const content = JSON.stringify(event.result.content)
+    expect(content).toContain("ok")
+    expect(content).toContain("post note")
+  } finally {
+    dispose()
+  }
+})
+
+test("PreToolUse context held for a tool that then fails rides along with the error", async () => {
+  const plugin = pluginWithHooks({
+    PreToolUse: [command(`echo '{"hookSpecificOutput":{"additionalContext":"pre note"}}'`)],
+    PostToolUseFailure: [command(`echo '{"hookSpecificOutput":{"additionalContext":"failure note"}}'`)],
+  })
+  const { ctx, toolHooks } = mockCtx()
+  const dispose = await bindHooks(ctx, { plugins: [plugin] }, bindOptions(plugin.plugin.root))
+  try {
+    const before = toolHooks.get("execute.before")!
+    const after = toolHooks.get("execute.after")!
+    const id = "call_pre_fail"
+    await before({ tool: "shell", sessionID: "ses_1", agent: "a", messageID: "m", id, input: { command: "ls" } })
+    const event: any = {
+      tool: "shell",
+      sessionID: "ses_1",
+      agent: "a",
+      messageID: "m",
+      id,
+      input: { command: "ls" },
+      status: "error",
+      error: { message: "tool blew up" },
+    }
+    await after(event)
+    expect(event.error.message).toContain("pre note")
+    expect(event.error.message).toContain("failure note")
+  } finally {
+    dispose()
+  }
+})
+
+test("concurrent SessionStart requests share one hook run", async () => {
+  const plugin = pluginWithHooks({
+    SessionStart: [command("echo run >> count.txt; sleep 0.5; echo shared-context")],
+  })
+  const root = plugin.plugin.root
+  const { ctx, sessionHooks } = mockCtx()
+  const dispose = await bindHooks(ctx, { plugins: [plugin] }, bindOptions(root))
+  try {
+    const onContext = sessionHooks.get("context")!
+    const first: any = { sessionID: "ses_race", messages: [], model: { id: "m" }, system: [] }
+    const second: any = { sessionID: "ses_race", messages: [], model: { id: "m" }, system: [] }
+    await Promise.all([onContext(first), onContext(second)])
+    expect(first.system.map((part: any) => part.text)).toContain("shared-context")
+    expect(second.system.map((part: any) => part.text)).toContain("shared-context")
+    // Two sequential runs would append two lines; one shared run appends one.
+    expect(readFileSync(path.join(root, "count.txt"), "utf8").trim().split("\n")).toHaveLength(1)
+  } finally {
+    dispose()
+  }
+})
+
+test("matcher pre-check skips the transcript round-trip when nothing could match", async () => {
+  const plugin = pluginWithHooks({ PreToolUse: [{ matcher: "Edit", ...command("echo blocked >&2; exit 2") }] })
+  const invocation = (name: string, input: Record<string, unknown>) => ({
+    event: "PreToolUse",
+    subject: name,
+    toolCall: { name, input },
+    payload: {},
+  })
+  expect(hasMatchingHandler([plugin], invocation("Read", {}))).toBe(false)
+  expect(hasMatchingHandler([plugin], invocation("Edit", { file_path: "/a.ts" }))).toBe(true)
+
+  const { ctx, toolHooks, contextCalls } = mockCtx()
+  const dispose = await bindHooks(ctx, { plugins: [plugin] }, bindOptions(plugin.plugin.root))
+  try {
+    const before = toolHooks.get("execute.before")!
+    await before({ tool: "shell", sessionID: "ses_1", agent: "a", messageID: "m", id: "c1", input: { command: "ls" } })
+    expect(contextCalls()).toBe(0)
+    await expect(
+      before({ tool: "edit", sessionID: "ses_1", agent: "a", messageID: "m", id: "c2", input: { path: "/a.ts" } }),
+    ).rejects.toThrow("blocked")
+    expect(contextCalls()).toBe(1)
+  } finally {
+    dispose()
+  }
+})
+
+test("http hooks expand only allowlisted environment variables", async () => {
+  const seen: { url?: string; token?: unknown }[] = []
+  const server = createServer((request, response) => {
+    seen.push({ url: request.url, token: request.headers["x-token"] })
+    response.writeHead(200, { "content-type": "application/json" })
+    response.end("{}")
+  })
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
+  const port = (server.address() as { port: number }).port
+  const name = "C4O_TEST_HTTP_SECRET"
+  process.env[name] = "s3cr3t-value"
+  try {
+    const hookFor = (extra: Record<string, unknown>) => ({
+      hooks: [{ type: "http", url: `http://127.0.0.1:${port}/hook`, headers: { "x-token": `\${${name}}` }, ...extra }],
+    })
+    const denied = pluginWithHooks({ UserPromptSubmit: [hookFor({})] })
+    await runHooks([denied], { event: "UserPromptSubmit", payload: { prompt: "x" } }, session(denied.plugin.root))
+    expect(seen.at(-1)?.token).toBe(`\${${name}}`)
+
+    const allowed = pluginWithHooks({ UserPromptSubmit: [hookFor({ allowedEnvVars: [name] })] })
+    await runHooks([allowed], { event: "UserPromptSubmit", payload: { prompt: "x" } }, session(allowed.plugin.root))
+    expect(seen.at(-1)?.token).toBe("s3cr3t-value")
+  } finally {
+    delete process.env[name]
+    await new Promise<void>((resolve) => server.close(() => resolve()))
+  }
 })

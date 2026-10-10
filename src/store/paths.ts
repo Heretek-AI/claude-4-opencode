@@ -30,7 +30,24 @@ export function storePaths(env: Record<string, string | undefined> = process.env
   }
 }
 
-/** Claude Code's rule for data directory names: anything outside `[A-Za-z0-9_-]` becomes `-`. */
+/** Collision-free encoding for data directory names into `[A-Za-z0-9_-]`.
+ *
+ * Claude Code's rule (anything outside `[A-Za-z0-9_-]` becomes `-`) maps
+ * `foo.bar@market` and `foo-bar@market` to the same directory. Instead `-` is
+ * the escape character: a literal `-` becomes `--`, and any other character
+ * outside `[A-Za-z0-9_]` becomes `-<lowercase hex codepoint>-`. `[A-Za-z0-9_]`
+ * pass through, so decoding is unambiguous and the mapping is injective. */
+export function encodeDataName(value: string) {
+  let out = ""
+  for (const ch of value) {
+    if (/[A-Za-z0-9_]/.test(ch)) out += ch
+    else if (ch === "-") out += "--"
+    else out += `-${ch.codePointAt(0)!.toString(16)}-`
+  }
+  return out
+}
+
+/** Persistent per-plugin data, exposed to plugins as `${CLAUDE_PLUGIN_DATA}`. */
 export function dataDirectory(paths: StorePaths, pluginId: string) {
-  return path.join(paths.data, pluginId.replace(/[^A-Za-z0-9_-]/g, "-"))
+  return path.join(paths.data, encodeDataName(pluginId))
 }

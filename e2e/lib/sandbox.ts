@@ -173,17 +173,32 @@ export class Sandbox {
     })
     let output = ""
     const url = await new Promise<string>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error(`opencode serve did not start:\n${output}`)), 60_000)
+      let settled = false
+      const timer = setTimeout(() => {
+        if (settled) return
+        settled = true
+        child.kill("SIGKILL")
+        reject(new Error(`opencode serve did not start:\n${output}`))
+      }, 60_000)
+      const onClose = (code: number | null) => {
+        if (settled) return
+        settled = true
+        clearTimeout(timer)
+        reject(new Error(`opencode serve exited ${code}:\n${output}`))
+      }
       const onData = (chunk: Buffer) => {
+        if (settled) return
         output += chunk
         const match = /server listening on (\S+)/.exec(output)
         if (!match) return
+        settled = true
         clearTimeout(timer)
+        child.off("close", onClose)
         resolve(match[1]!)
       }
       child.stdout.on("data", onData)
       child.stderr.on("data", onData)
-      child.on("close", (code) => reject(new Error(`opencode serve exited ${code}:\n${output}`)))
+      child.on("close", onClose)
     })
     const server = new Server(url, this.project, child)
     this.servers.push(server)
