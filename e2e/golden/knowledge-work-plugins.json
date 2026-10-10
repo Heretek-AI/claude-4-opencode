@@ -1,0 +1,578 @@
+{
+  "claudeCode": "2.1.287",
+  "repo": "anthropics/knowledge-work-plugins",
+  "sha": "95bdacc803aa5cfdb10f35e5b9fb2d4b11100133",
+  "failed": {},
+  "plugins": {
+    "apollo": {
+      "commands": [
+        "apollo:enrich-lead",
+        "apollo:prospect",
+        "apollo:sequence-load"
+      ],
+      "skills": [
+        "apollo:enrich-lead",
+        "apollo:prospect",
+        "apollo:sequence-load"
+      ],
+      "agents": []
+    },
+    "bio-research": {
+      "commands": [
+        "bio-research:instrument-data-to-allotrope",
+        "bio-research:nextflow-development",
+        "bio-research:scientific-problem-selection",
+        "bio-research:scvi-tools",
+        "bio-research:single-cell-rna-qc",
+        "bio-research:start"
+      ],
+      "skills": [
+        "bio-research:instrument-data-to-allotrope",
+        "bio-research:nextflow-development",
+        "bio-research:scientific-problem-selection",
+        "bio-research:scvi-tools",
+        "bio-research:single-cell-rna-qc",
+        "bio-research:start"
+      ],
+      "agents": []
+    },
+    "brand-voice": {
+      "commands": [
+        "brand-voice:brand-voice-enforcement",
+        "brand-voice:discover-brand",
+        "brand-voice:enforce-voice",
+        "brand-voice:generate-guidelines",
+        "brand-voice:guideline-generation"
+      ],
+      "skills": [
+        "brand-voice:brand-voice-enforcement",
+        "brand-voice:discover-brand",
+        "brand-voice:guideline-generation"
+      ],
+      "agents": [
+        "brand-voice:content-generation",
+        "brand-voice:conversation-analysis",
+        "brand-voice:discover-brand",
+        "brand-voice:document-analysis",
+        "brand-voice:quality-assurance"
+      ]
+    },
+    "common-room": {
+      "commands": [
+        "common-room:account-research",
+        "common-room:call-prep",
+        "common-room:compose-outreach",
+        "common-room:contact-research",
+        "common-room:generate-account-plan",
+        "common-room:prospect",
+        "common-room:weekly-brief",
+        "common-room:weekly-prep-brief"
+      ],
+      "skills": [
+        "common-room:account-research",
+        "common-room:call-prep",
+        "common-room:compose-outreach",
+        "common-room:contact-research",
+        "common-room:prospect",
+        "common-room:weekly-prep-brief"
+      ],
+      "agents": []
+    },
+    "cowork-plugin-management": {
+      "commands": [
+        "cowork-plugin-management:cowork-plugin-customizer",
+        "cowork-plugin-management:create-cowork-plugin"
+      ],
+      "skills": [
+        "cowork-plugin-management:cowork-plugin-customizer",
+        "cowork-plugin-management:create-cowork-plugin"
+      ],
+      "agents": []
+    },
+    "customer-support": {
+      "commands": [
+        "customer-support:customer-escalation",
+        "customer-support:customer-research",
+        "customer-support:draft-response",
+        "customer-support:kb-article",
+        "customer-support:ticket-triage"
+      ],
+      "skills": [
+        "customer-support:customer-escalation",
+        "customer-support:customer-research",
+        "customer-support:draft-response",
+        "customer-support:kb-article",
+        "customer-support:ticket-triage"
+      ],
+      "agents": []
+    },
+    "data": {
+      "commands": [
+        "data:analyze",
+        "data:build-dashboard",
+        "data:create-viz",
+        "data:data-context-extractor",
+        "data:explore-data",
+        "data:validate-data",
+        "data:write-query"
+      ],
+      "skills": [
+        "data:analyze",
+        "data:build-dashboard",
+        "data:create-viz",
+        "data:data-context-extractor",
+        "data:explore-data",
+        "data:validate-data",
+        "data:write-query"
+      ],
+      "agents": []
+    },
+    "design": {
+      "commands": [
+        "design:accessibility-review",
+        "design:design-critique",
+        "design:design-handoff",
+        "design:design-system",
+        "design:research-synthesis",
+        "design:user-research",
+        "design:ux-copy"
+      ],
+      "skills": [
+        "design:accessibility-review",
+        "design:design-critique",
+        "design:design-handoff",
+        "design:design-system",
+        "design:research-synthesis",
+        "design:user-research",
+        "design:ux-copy"
+      ],
+      "agents": []
+    },
+    "engineering": {
+      "commands": [
+        "engineering:architecture",
+        "engineering:code-review",
+        "engineering:debug",
+        "engineering:deploy-checklist",
+        "engineering:documentation",
+        "engineering:incident-response",
+        "engineering:standup",
+        "engineering:system-design",
+        "engineering:tech-debt",
+        "engineering:testing-strategy"
+      ],
+      "skills": [
+        "engineering:architecture",
+        "engineering:code-review",
+        "engineering:debug",
+        "engineering:deploy-checklist",
+        "engineering:documentation",
+        "engineering:incident-response",
+        "engineering:standup",
+        "engineering:system-design",
+        "engineering:tech-debt",
+        "engineering:testing-strategy"
+      ],
+      "agents": []
+    },
+    "enterprise-search": {
+      "commands": [
+        "enterprise-search:digest",
+        "enterprise-search:search"
+      ],
+      "skills": [
+        "enterprise-search:digest",
+        "enterprise-search:search"
+      ],
+      "agents": []
+    },
+    "finance": {
+      "commands": [
+        "finance:financial-statements",
+        "finance:journal-entry",
+        "finance:reconciliation",
+        "finance:sox-testing",
+        "finance:variance-analysis"
+      ],
+      "skills": [
+        "finance:financial-statements",
+        "finance:journal-entry",
+        "finance:reconciliation",
+        "finance:sox-testing",
+        "finance:variance-analysis"
+      ],
+      "agents": []
+    },
+    "human-resources": {
+      "commands": [
+        "human-resources:comp-analysis",
+        "human-resources:draft-offer",
+        "human-resources:interview-prep",
+        "human-resources:onboarding",
+        "human-resources:org-planning",
+        "human-resources:people-report",
+        "human-resources:performance-review",
+        "human-resources:policy-lookup",
+        "human-resources:recruiting-pipeline"
+      ],
+      "skills": [
+        "human-resources:comp-analysis",
+        "human-resources:draft-offer",
+        "human-resources:interview-prep",
+        "human-resources:onboarding",
+        "human-resources:org-planning",
+        "human-resources:people-report",
+        "human-resources:performance-review",
+        "human-resources:policy-lookup",
+        "human-resources:recruiting-pipeline"
+      ],
+      "agents": []
+    },
+    "legal": {
+      "commands": [
+        "legal:brief",
+        "legal:compliance-check",
+        "legal:legal-response",
+        "legal:legal-risk-assessment",
+        "legal:meeting-briefing",
+        "legal:review-contract",
+        "legal:signature-request",
+        "legal:triage-nda",
+        "legal:vendor-check"
+      ],
+      "skills": [
+        "legal:brief",
+        "legal:compliance-check",
+        "legal:legal-response",
+        "legal:legal-risk-assessment",
+        "legal:meeting-briefing",
+        "legal:review-contract",
+        "legal:signature-request",
+        "legal:triage-nda",
+        "legal:vendor-check"
+      ],
+      "agents": []
+    },
+    "marketing": {
+      "commands": [
+        "marketing:brand-review",
+        "marketing:campaign-plan",
+        "marketing:competitive-brief",
+        "marketing:draft-content",
+        "marketing:email-sequence",
+        "marketing:performance-report",
+        "marketing:seo-audit"
+      ],
+      "skills": [
+        "marketing:brand-review",
+        "marketing:campaign-plan",
+        "marketing:competitive-brief",
+        "marketing:draft-content",
+        "marketing:email-sequence",
+        "marketing:performance-report",
+        "marketing:seo-audit"
+      ],
+      "agents": []
+    },
+    "operations": {
+      "commands": [
+        "operations:capacity-plan",
+        "operations:change-request",
+        "operations:compliance-tracking",
+        "operations:process-doc",
+        "operations:process-optimization",
+        "operations:risk-assessment",
+        "operations:runbook",
+        "operations:status-report",
+        "operations:vendor-review"
+      ],
+      "skills": [
+        "operations:capacity-plan",
+        "operations:change-request",
+        "operations:compliance-tracking",
+        "operations:process-doc",
+        "operations:process-optimization",
+        "operations:risk-assessment",
+        "operations:runbook",
+        "operations:status-report",
+        "operations:vendor-review"
+      ],
+      "agents": []
+    },
+    "pdf-viewer": {
+      "commands": [
+        "pdf-viewer:annotate",
+        "pdf-viewer:fill-form",
+        "pdf-viewer:open",
+        "pdf-viewer:sign",
+        "pdf-viewer:view-pdf"
+      ],
+      "skills": [
+        "pdf-viewer:view-pdf"
+      ],
+      "agents": []
+    },
+    "product-management": {
+      "commands": [
+        "product-management:brainstorm",
+        "product-management:competitive-brief",
+        "product-management:metrics-review",
+        "product-management:product-brainstorming",
+        "product-management:roadmap-update",
+        "product-management:sprint-planning",
+        "product-management:stakeholder-update",
+        "product-management:synthesize-research",
+        "product-management:write-spec"
+      ],
+      "skills": [
+        "product-management:competitive-brief",
+        "product-management:metrics-review",
+        "product-management:product-brainstorming",
+        "product-management:roadmap-update",
+        "product-management:sprint-planning",
+        "product-management:stakeholder-update",
+        "product-management:synthesize-research",
+        "product-management:write-spec"
+      ],
+      "agents": []
+    },
+    "productivity": {
+      "commands": [
+        "productivity:start",
+        "productivity:update"
+      ],
+      "skills": [
+        "productivity:start",
+        "productivity:update"
+      ],
+      "agents": []
+    },
+    "sales": {
+      "commands": [
+        "sales:account-context",
+        "sales:account-plan",
+        "sales:account-research",
+        "sales:account-tiering",
+        "sales:call-prep",
+        "sales:call-summary",
+        "sales:close-plan",
+        "sales:competitive-intelligence",
+        "sales:create-an-asset",
+        "sales:crm-hygiene-check",
+        "sales:customer-health",
+        "sales:customer-voice",
+        "sales:daily-briefing",
+        "sales:deal-advance-gap",
+        "sales:deal-review",
+        "sales:deal-signals",
+        "sales:deal-slip-scenario",
+        "sales:draft-outreach",
+        "sales:end-of-day",
+        "sales:expansion-whitespace",
+        "sales:forecast",
+        "sales:handle-objection",
+        "sales:inbox-sweep",
+        "sales:lead-triage",
+        "sales:log-activity",
+        "sales:pipeline-review",
+        "sales:renewal-radar",
+        "sales:rep-context",
+        "sales:route-lead",
+        "sales:schedule-meeting",
+        "sales:setup",
+        "sales:stakeholder-map",
+        "sales:team-pipeline",
+        "sales:update-opportunity",
+        "sales:weekly-wrap",
+        "sales:win-loss-review"
+      ],
+      "skills": [
+        "sales:account-context",
+        "sales:account-plan",
+        "sales:account-research",
+        "sales:account-tiering",
+        "sales:call-prep",
+        "sales:call-summary",
+        "sales:close-plan",
+        "sales:competitive-intelligence",
+        "sales:create-an-asset",
+        "sales:crm-hygiene-check",
+        "sales:customer-health",
+        "sales:customer-voice",
+        "sales:daily-briefing",
+        "sales:deal-advance-gap",
+        "sales:deal-review",
+        "sales:deal-signals",
+        "sales:deal-slip-scenario",
+        "sales:draft-outreach",
+        "sales:end-of-day",
+        "sales:expansion-whitespace",
+        "sales:forecast",
+        "sales:handle-objection",
+        "sales:inbox-sweep",
+        "sales:lead-triage",
+        "sales:log-activity",
+        "sales:pipeline-review",
+        "sales:renewal-radar",
+        "sales:rep-context",
+        "sales:route-lead",
+        "sales:schedule-meeting",
+        "sales:setup",
+        "sales:stakeholder-map",
+        "sales:team-pipeline",
+        "sales:update-opportunity",
+        "sales:weekly-wrap",
+        "sales:win-loss-review"
+      ],
+      "agents": []
+    },
+    "slack-by-salesforce": {
+      "commands": [
+        "slack-by-salesforce:channel-digest",
+        "slack-by-salesforce:draft-announcement",
+        "slack-by-salesforce:find-discussions",
+        "slack-by-salesforce:slack-messaging",
+        "slack-by-salesforce:slack-search",
+        "slack-by-salesforce:standup",
+        "slack-by-salesforce:summarize-channel"
+      ],
+      "skills": [
+        "slack-by-salesforce:slack-messaging",
+        "slack-by-salesforce:slack-search"
+      ],
+      "agents": []
+    },
+    "small-business": {
+      "commands": [
+        "small-business:ad-manager",
+        "small-business:ap-processor",
+        "small-business:brand-style",
+        "small-business:build-agent",
+        "small-business:build-connector",
+        "small-business:business-pulse",
+        "small-business:call-list",
+        "small-business:canva-creator",
+        "small-business:cash-flow-snapshot",
+        "small-business:close-month",
+        "small-business:content-strategy",
+        "small-business:contract-review",
+        "small-business:crm-autopilot",
+        "small-business:grant-rfp-writer",
+        "small-business:grow-pipeline",
+        "small-business:growth-pulse",
+        "small-business:hiring-screener",
+        "small-business:inbox-manager",
+        "small-business:inventory-planner",
+        "small-business:invoice-chase",
+        "small-business:job-post-builder",
+        "small-business:lead-finder",
+        "small-business:lead-triage",
+        "small-business:marketing-monday",
+        "small-business:monday-brief",
+        "small-business:month-end-prep",
+        "small-business:outreach-composer",
+        "small-business:pay-the-bills",
+        "small-business:payroll-prep",
+        "small-business:plan-payroll",
+        "small-business:proposal-builder",
+        "small-business:reactivate",
+        "small-business:report-builder",
+        "small-business:report-pack",
+        "small-business:restock",
+        "small-business:review-reputation",
+        "small-business:seo-ai-visibility",
+        "small-business:smb-onboard",
+        "small-business:smb-router",
+        "small-business:social-content-engine",
+        "small-business:speed-to-lead",
+        "small-business:tax-prep",
+        "small-business:tax-season-organizer",
+        "small-business:ticket-deflector"
+      ],
+      "skills": [
+        "small-business:ad-manager",
+        "small-business:ap-processor",
+        "small-business:brand-style",
+        "small-business:build-agent",
+        "small-business:build-connector",
+        "small-business:business-pulse",
+        "small-business:call-list",
+        "small-business:canva-creator",
+        "small-business:cash-flow-snapshot",
+        "small-business:close-month",
+        "small-business:content-strategy",
+        "small-business:contract-review",
+        "small-business:crm-autopilot",
+        "small-business:grant-rfp-writer",
+        "small-business:grow-pipeline",
+        "small-business:growth-pulse",
+        "small-business:hiring-screener",
+        "small-business:inbox-manager",
+        "small-business:inventory-planner",
+        "small-business:invoice-chase",
+        "small-business:job-post-builder",
+        "small-business:lead-finder",
+        "small-business:lead-triage",
+        "small-business:marketing-monday",
+        "small-business:monday-brief",
+        "small-business:month-end-prep",
+        "small-business:outreach-composer",
+        "small-business:pay-the-bills",
+        "small-business:payroll-prep",
+        "small-business:plan-payroll",
+        "small-business:proposal-builder",
+        "small-business:reactivate",
+        "small-business:report-builder",
+        "small-business:report-pack",
+        "small-business:restock",
+        "small-business:review-reputation",
+        "small-business:seo-ai-visibility",
+        "small-business:smb-onboard",
+        "small-business:smb-router",
+        "small-business:social-content-engine",
+        "small-business:speed-to-lead",
+        "small-business:tax-prep",
+        "small-business:tax-season-organizer",
+        "small-business:ticket-deflector"
+      ],
+      "agents": []
+    },
+    "zoom-plugin": {
+      "commands": [
+        "zoom-plugin:build-zoom-bot",
+        "zoom-plugin:build-zoom-meeting-app",
+        "zoom-plugin:contact-center",
+        "zoom-plugin:debug-zoom",
+        "zoom-plugin:meeting-sdk",
+        "zoom-plugin:phone",
+        "zoom-plugin:rest-api",
+        "zoom-plugin:setup-zoom-mcp",
+        "zoom-plugin:setup-zoom-oauth",
+        "zoom-plugin:start",
+        "zoom-plugin:team-chat",
+        "zoom-plugin:video-sdk",
+        "zoom-plugin:virtual-agent",
+        "zoom-plugin:webhooks",
+        "zoom-plugin:websockets"
+      ],
+      "skills": [
+        "zoom-plugin:build-zoom-bot",
+        "zoom-plugin:build-zoom-meeting-app",
+        "zoom-plugin:contact-center",
+        "zoom-plugin:debug-zoom",
+        "zoom-plugin:meeting-sdk",
+        "zoom-plugin:phone",
+        "zoom-plugin:rest-api",
+        "zoom-plugin:setup-zoom-mcp",
+        "zoom-plugin:setup-zoom-oauth",
+        "zoom-plugin:start",
+        "zoom-plugin:team-chat",
+        "zoom-plugin:video-sdk",
+        "zoom-plugin:virtual-agent",
+        "zoom-plugin:webhooks",
+        "zoom-plugin:websockets"
+      ],
+      "agents": []
+    }
+  }
+}

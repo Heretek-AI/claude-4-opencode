@@ -1,0 +1,12 @@
+{
+  "name": "probe",
+  "version": "1.0.0",
+  "description": "Fixture plugin that exercises each translated component with observable effects",
+  "mcpServers": {
+    "echo": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/server.mjs"],
+      "env": { "PROBE_GREETING": "${PROBE_GREETING:-hello}" }
+    }
+  }
+}

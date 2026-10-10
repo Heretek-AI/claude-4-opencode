@@ -1,0 +1,1354 @@
+{
+  "claudeCode": "2.1.287",
+  "repo": "wshobson/agents",
+  "sha": "46891e7e60da0e52baf1050b7b6391b64e84c6d9",
+  "failed": {},
+  "plugins": {
+    "accessibility-compliance": {
+      "commands": [
+        "accessibility-compliance:accessibility-audit",
+        "accessibility-compliance:screen-reader-testing",
+        "accessibility-compliance:wcag-audit-patterns"
+      ],
+      "skills": [
+        "accessibility-compliance:screen-reader-testing",
+        "accessibility-compliance:wcag-audit-patterns"
+      ],
+      "agents": [
+        "accessibility-compliance:ui-visual-validator"
+      ]
+    },
+    "agent-orchestration": {
+      "commands": [
+        "agent-orchestration:improve-agent",
+        "agent-orchestration:multi-agent-optimize"
+      ],
+      "skills": [],
+      "agents": [
+        "agent-orchestration:agent-orchestration-context-manager"
+      ]
+    },
+    "agent-teams": {
+      "commands": [
+        "agent-teams:multi-reviewer-patterns",
+        "agent-teams:parallel-debugging",
+        "agent-teams:parallel-feature-development",
+        "agent-teams:task-coordination-strategies",
+        "agent-teams:team-communication-protocols",
+        "agent-teams:team-composition-patterns",
+        "agent-teams:team-debug",
+        "agent-teams:team-delegate",
+        "agent-teams:team-feature",
+        "agent-teams:team-review",
+        "agent-teams:team-shutdown",
+        "agent-teams:team-spawn",
+        "agent-teams:team-status"
+      ],
+      "skills": [
+        "agent-teams:multi-reviewer-patterns",
+        "agent-teams:parallel-debugging",
+        "agent-teams:parallel-feature-development",
+        "agent-teams:task-coordination-strategies",
+        "agent-teams:team-communication-protocols",
+        "agent-teams:team-composition-patterns"
+      ],
+      "agents": [
+        "agent-teams:team-debugger",
+        "agent-teams:team-implementer",
+        "agent-teams:team-lead",
+        "agent-teams:team-reviewer"
+      ]
+    },
+    "api-scaffolding": {
+      "commands": [
+        "api-scaffolding:fastapi-templates"
+      ],
+      "skills": [
+        "api-scaffolding:fastapi-templates"
+      ],
+      "agents": [
+        "api-scaffolding:api-scaffolding-backend-architect",
+        "api-scaffolding:api-scaffolding-django-pro",
+        "api-scaffolding:api-scaffolding-fastapi-pro",
+        "api-scaffolding:api-scaffolding-graphql-architect"
+      ]
+    },
+    "api-testing-observability": {
+      "commands": [
+        "api-testing-observability:api-mock"
+      ],
+      "skills": [],
+      "agents": [
+        "api-testing-observability:api-testing-observability-api-documenter"
+      ]
+    },
+    "application-performance": {
+      "commands": [
+        "application-performance:performance-optimization"
+      ],
+      "skills": [],
+      "agents": [
+        "application-performance:application-performance-frontend-developer",
+        "application-performance:application-performance-observability-engineer",
+        "application-performance:application-performance-performance-engineer"
+      ]
+    },
+    "arm-cortex-microcontrollers": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "arm-cortex-microcontrollers:arm-cortex-expert"
+      ]
+    },
+    "avoid-ai-writing": {
+      "commands": [
+        "avoid-ai-writing:avoid-ai-writing"
+      ],
+      "skills": [
+        "avoid-ai-writing:avoid-ai-writing"
+      ],
+      "agents": []
+    },
+    "backend-api-security": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "backend-api-security:backend-api-security-backend-architect",
+        "backend-api-security:backend-api-security-backend-security-coder"
+      ]
+    },
+    "backend-development": {
+      "commands": [
+        "backend-development:api-design-principles",
+        "backend-development:architecture-patterns",
+        "backend-development:cqrs-implementation",
+        "backend-development:event-store-design",
+        "backend-development:feature-development",
+        "backend-development:microservices-patterns",
+        "backend-development:projection-patterns",
+        "backend-development:saga-orchestration",
+        "backend-development:temporal-python-testing",
+        "backend-development:workflow-orchestration-patterns"
+      ],
+      "skills": [
+        "backend-development:api-design-principles",
+        "backend-development:architecture-patterns",
+        "backend-development:cqrs-implementation",
+        "backend-development:event-store-design",
+        "backend-development:microservices-patterns",
+        "backend-development:projection-patterns",
+        "backend-development:saga-orchestration",
+        "backend-development:temporal-python-testing",
+        "backend-development:workflow-orchestration-patterns"
+      ],
+      "agents": [
+        "backend-development:backend-development-backend-architect",
+        "backend-development:backend-development-graphql-architect",
+        "backend-development:backend-development-performance-engineer",
+        "backend-development:backend-development-security-auditor",
+        "backend-development:backend-development-tdd-orchestrator",
+        "backend-development:backend-development-test-automator",
+        "backend-development:event-sourcing-architect",
+        "backend-development:temporal-python-pro"
+      ]
+    },
+    "before-you-build": {
+      "commands": [
+        "before-you-build:before-you-build"
+      ],
+      "skills": [
+        "before-you-build:before-you-build"
+      ],
+      "agents": []
+    },
+    "block-no-verify": {
+      "commands": [
+        "block-no-verify:block-no-verify",
+        "block-no-verify:block-no-verify-hook"
+      ],
+      "skills": [
+        "block-no-verify:block-no-verify-hook"
+      ],
+      "agents": []
+    },
+    "blockchain-web3": {
+      "commands": [
+        "blockchain-web3:defi-protocol-templates",
+        "blockchain-web3:nft-standards",
+        "blockchain-web3:solidity-security",
+        "blockchain-web3:web3-testing"
+      ],
+      "skills": [
+        "blockchain-web3:defi-protocol-templates",
+        "blockchain-web3:nft-standards",
+        "blockchain-web3:solidity-security",
+        "blockchain-web3:web3-testing"
+      ],
+      "agents": [
+        "blockchain-web3:blockchain-developer"
+      ]
+    },
+    "brand-landingpage": {
+      "commands": [
+        "brand-landingpage:brand-landingpage"
+      ],
+      "skills": [
+        "brand-landingpage:brand-landingpage"
+      ],
+      "agents": []
+    },
+    "business-analytics": {
+      "commands": [
+        "business-analytics:data-storytelling",
+        "business-analytics:kpi-dashboard-design"
+      ],
+      "skills": [
+        "business-analytics:data-storytelling",
+        "business-analytics:kpi-dashboard-design"
+      ],
+      "agents": [
+        "business-analytics:business-analyst"
+      ]
+    },
+    "c4-architecture": {
+      "commands": [
+        "c4-architecture:c4-architecture"
+      ],
+      "skills": [],
+      "agents": [
+        "c4-architecture:c4-code",
+        "c4-architecture:c4-component",
+        "c4-architecture:c4-container",
+        "c4-architecture:c4-context"
+      ]
+    },
+    "cicd-automation": {
+      "commands": [
+        "cicd-automation:deployment-pipeline-design",
+        "cicd-automation:github-actions-templates",
+        "cicd-automation:gitlab-ci-patterns",
+        "cicd-automation:secrets-management",
+        "cicd-automation:workflow-automate"
+      ],
+      "skills": [
+        "cicd-automation:deployment-pipeline-design",
+        "cicd-automation:github-actions-templates",
+        "cicd-automation:gitlab-ci-patterns",
+        "cicd-automation:secrets-management"
+      ],
+      "agents": [
+        "cicd-automation:cicd-automation-cloud-architect",
+        "cicd-automation:cicd-automation-deployment-engineer",
+        "cicd-automation:cicd-automation-devops-troubleshooter",
+        "cicd-automation:cicd-automation-kubernetes-architect",
+        "cicd-automation:cicd-automation-terraform-specialist"
+      ]
+    },
+    "cloud-infrastructure": {
+      "commands": [
+        "cloud-infrastructure:cost-optimization",
+        "cloud-infrastructure:hybrid-cloud-networking",
+        "cloud-infrastructure:istio-traffic-management",
+        "cloud-infrastructure:linkerd-patterns",
+        "cloud-infrastructure:mtls-configuration",
+        "cloud-infrastructure:multi-cloud-architecture",
+        "cloud-infrastructure:service-mesh-observability",
+        "cloud-infrastructure:terraform-module-library"
+      ],
+      "skills": [
+        "cloud-infrastructure:cost-optimization",
+        "cloud-infrastructure:hybrid-cloud-networking",
+        "cloud-infrastructure:istio-traffic-management",
+        "cloud-infrastructure:linkerd-patterns",
+        "cloud-infrastructure:mtls-configuration",
+        "cloud-infrastructure:multi-cloud-architecture",
+        "cloud-infrastructure:service-mesh-observability",
+        "cloud-infrastructure:terraform-module-library"
+      ],
+      "agents": [
+        "cloud-infrastructure:cloud-infrastructure-cloud-architect",
+        "cloud-infrastructure:cloud-infrastructure-deployment-engineer",
+        "cloud-infrastructure:cloud-infrastructure-kubernetes-architect",
+        "cloud-infrastructure:cloud-infrastructure-network-engineer",
+        "cloud-infrastructure:cloud-infrastructure-terraform-specialist",
+        "cloud-infrastructure:hybrid-cloud-architect",
+        "cloud-infrastructure:service-mesh-expert"
+      ]
+    },
+    "code-documentation": {
+      "commands": [
+        "code-documentation:code-explain",
+        "code-documentation:doc-generate"
+      ],
+      "skills": [],
+      "agents": [
+        "code-documentation:code-documentation-code-reviewer",
+        "code-documentation:code-documentation-docs-architect",
+        "code-documentation:code-documentation-tutorial-engineer"
+      ]
+    },
+    "code-refactoring": {
+      "commands": [
+        "code-refactoring:context-restore",
+        "code-refactoring:refactor-clean",
+        "code-refactoring:tech-debt"
+      ],
+      "skills": [],
+      "agents": [
+        "code-refactoring:code-refactoring-code-reviewer",
+        "code-refactoring:code-refactoring-legacy-modernizer"
+      ]
+    },
+    "codebase-cleanup": {
+      "commands": [
+        "codebase-cleanup:deps-audit",
+        "codebase-cleanup:refactor-clean",
+        "codebase-cleanup:tech-debt"
+      ],
+      "skills": [],
+      "agents": [
+        "codebase-cleanup:codebase-cleanup-code-reviewer",
+        "codebase-cleanup:codebase-cleanup-test-automator"
+      ]
+    },
+    "comprehensive-review": {
+      "commands": [
+        "comprehensive-review:full-review",
+        "comprehensive-review:pr-enhance"
+      ],
+      "skills": [],
+      "agents": [
+        "comprehensive-review:comprehensive-review-architect-review",
+        "comprehensive-review:comprehensive-review-code-reviewer",
+        "comprehensive-review:comprehensive-review-security-auditor"
+      ]
+    },
+    "conductor": {
+      "commands": [
+        "conductor:context-driven-development",
+        "conductor:implement",
+        "conductor:manage",
+        "conductor:new-track",
+        "conductor:revert",
+        "conductor:setup",
+        "conductor:status",
+        "conductor:track-management",
+        "conductor:workflow-patterns"
+      ],
+      "skills": [
+        "conductor:context-driven-development",
+        "conductor:track-management",
+        "conductor:workflow-patterns"
+      ],
+      "agents": [
+        "conductor:conductor-validator"
+      ]
+    },
+    "content-marketing": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "content-marketing:content-marketer",
+        "content-marketing:search-specialist"
+      ]
+    },
+    "context-management": {
+      "commands": [
+        "context-management:context-restore",
+        "context-management:context-save"
+      ],
+      "skills": [],
+      "agents": [
+        "context-management:context-management-context-manager"
+      ]
+    },
+    "customer-sales-automation": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "customer-sales-automation:customer-support",
+        "customer-sales-automation:sales-automator"
+      ]
+    },
+    "data-engineering": {
+      "commands": [
+        "data-engineering:airflow-dag-patterns",
+        "data-engineering:data-driven-feature",
+        "data-engineering:data-pipeline",
+        "data-engineering:data-quality-frameworks",
+        "data-engineering:dbt-transformation-patterns",
+        "data-engineering:spark-optimization"
+      ],
+      "skills": [
+        "data-engineering:airflow-dag-patterns",
+        "data-engineering:data-quality-frameworks",
+        "data-engineering:dbt-transformation-patterns",
+        "data-engineering:spark-optimization"
+      ],
+      "agents": [
+        "data-engineering:data-engineer",
+        "data-engineering:data-engineering-backend-architect"
+      ]
+    },
+    "data-validation-suite": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "data-validation-suite:data-validation-suite-backend-security-coder"
+      ]
+    },
+    "database-cloud-optimization": {
+      "commands": [
+        "database-cloud-optimization:cost-optimize"
+      ],
+      "skills": [],
+      "agents": [
+        "database-cloud-optimization:database-cloud-optimization-backend-architect",
+        "database-cloud-optimization:database-cloud-optimization-cloud-architect",
+        "database-cloud-optimization:database-cloud-optimization-database-architect",
+        "database-cloud-optimization:database-cloud-optimization-database-optimizer"
+      ]
+    },
+    "database-design": {
+      "commands": [
+        "database-design:postgresql-table-design"
+      ],
+      "skills": [
+        "database-design:postgresql-table-design"
+      ],
+      "agents": [
+        "database-design:database-design-database-architect",
+        "database-design:sql-pro"
+      ]
+    },
+    "database-migrations": {
+      "commands": [
+        "database-migrations:migration-observability",
+        "database-migrations:sql-migrations"
+      ],
+      "skills": [],
+      "agents": [
+        "database-migrations:database-admin",
+        "database-migrations:database-migrations-database-optimizer"
+      ]
+    },
+    "debugging-toolkit": {
+      "commands": [
+        "debugging-toolkit:smart-debug"
+      ],
+      "skills": [],
+      "agents": [
+        "debugging-toolkit:debugging-toolkit-debugger",
+        "debugging-toolkit:debugging-toolkit-dx-optimizer"
+      ]
+    },
+    "dependency-management": {
+      "commands": [
+        "dependency-management:deps-audit"
+      ],
+      "skills": [],
+      "agents": [
+        "dependency-management:dependency-management-legacy-modernizer"
+      ]
+    },
+    "deployment-strategies": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "deployment-strategies:deployment-strategies-deployment-engineer",
+        "deployment-strategies:deployment-strategies-terraform-specialist"
+      ]
+    },
+    "deployment-validation": {
+      "commands": [
+        "deployment-validation:config-validate"
+      ],
+      "skills": [],
+      "agents": [
+        "deployment-validation:deployment-validation-cloud-architect"
+      ]
+    },
+    "developer-essentials": {
+      "commands": [
+        "developer-essentials:auth-implementation-patterns",
+        "developer-essentials:bazel-build-optimization",
+        "developer-essentials:code-review-excellence",
+        "developer-essentials:debugging-strategies",
+        "developer-essentials:e2e-testing-patterns",
+        "developer-essentials:error-handling-patterns",
+        "developer-essentials:git-advanced-workflows",
+        "developer-essentials:monorepo-management",
+        "developer-essentials:nx-workspace-patterns",
+        "developer-essentials:sql-optimization-patterns",
+        "developer-essentials:turborepo-caching"
+      ],
+      "skills": [
+        "developer-essentials:auth-implementation-patterns",
+        "developer-essentials:bazel-build-optimization",
+        "developer-essentials:code-review-excellence",
+        "developer-essentials:debugging-strategies",
+        "developer-essentials:e2e-testing-patterns",
+        "developer-essentials:error-handling-patterns",
+        "developer-essentials:git-advanced-workflows",
+        "developer-essentials:monorepo-management",
+        "developer-essentials:nx-workspace-patterns",
+        "developer-essentials:sql-optimization-patterns",
+        "developer-essentials:turborepo-caching"
+      ],
+      "agents": [
+        "developer-essentials:monorepo-architect"
+      ]
+    },
+    "dgx-spark-ops": {
+      "commands": [
+        "dgx-spark-ops:spark-environment-setup",
+        "dgx-spark-ops:spark-memory-thermal-ops",
+        "dgx-spark-ops:spark-preflight",
+        "dgx-spark-ops:spark-training-gotchas"
+      ],
+      "skills": [
+        "dgx-spark-ops:spark-environment-setup",
+        "dgx-spark-ops:spark-memory-thermal-ops",
+        "dgx-spark-ops:spark-training-gotchas"
+      ],
+      "agents": [
+        "dgx-spark-ops:dgx-spark-ops-engineer"
+      ]
+    },
+    "distributed-debugging": {
+      "commands": [
+        "distributed-debugging:debug-trace"
+      ],
+      "skills": [],
+      "agents": [
+        "distributed-debugging:distributed-debugging-devops-troubleshooter",
+        "distributed-debugging:distributed-debugging-error-detective"
+      ]
+    },
+    "documentation-generation": {
+      "commands": [
+        "documentation-generation:architecture-decision-records",
+        "documentation-generation:changelog-automation",
+        "documentation-generation:doc-generate",
+        "documentation-generation:openapi-spec-generation"
+      ],
+      "skills": [
+        "documentation-generation:architecture-decision-records",
+        "documentation-generation:changelog-automation",
+        "documentation-generation:openapi-spec-generation"
+      ],
+      "agents": [
+        "documentation-generation:documentation-generation-api-documenter",
+        "documentation-generation:documentation-generation-docs-architect",
+        "documentation-generation:documentation-generation-tutorial-engineer",
+        "documentation-generation:mermaid-expert",
+        "documentation-generation:reference-builder"
+      ]
+    },
+    "documentation-standards": {
+      "commands": [
+        "documentation-standards:grounded-vault",
+        "documentation-standards:hads"
+      ],
+      "skills": [
+        "documentation-standards:grounded-vault",
+        "documentation-standards:hads"
+      ],
+      "agents": []
+    },
+    "dotnet-contribution": {
+      "commands": [
+        "dotnet-contribution:dotnet-backend-patterns"
+      ],
+      "skills": [
+        "dotnet-contribution:dotnet-backend-patterns"
+      ],
+      "agents": [
+        "dotnet-contribution:dotnet-architect"
+      ]
+    },
+    "error-debugging": {
+      "commands": [
+        "error-debugging:error-analysis",
+        "error-debugging:error-trace",
+        "error-debugging:multi-agent-review"
+      ],
+      "skills": [],
+      "agents": [
+        "error-debugging:error-debugging-debugger",
+        "error-debugging:error-debugging-error-detective"
+      ]
+    },
+    "error-diagnostics": {
+      "commands": [
+        "error-diagnostics:error-analysis",
+        "error-diagnostics:error-trace",
+        "error-diagnostics:smart-debug"
+      ],
+      "skills": [],
+      "agents": [
+        "error-diagnostics:error-diagnostics-debugger",
+        "error-diagnostics:error-diagnostics-error-detective"
+      ]
+    },
+    "file-conversion": {
+      "commands": [
+        "file-conversion:file-conversion"
+      ],
+      "skills": [
+        "file-conversion:file-conversion"
+      ],
+      "agents": []
+    },
+    "framework-migration": {
+      "commands": [
+        "framework-migration:angular-migration",
+        "framework-migration:code-migrate",
+        "framework-migration:database-migration",
+        "framework-migration:dependency-upgrade",
+        "framework-migration:deps-upgrade",
+        "framework-migration:legacy-modernize",
+        "framework-migration:react-modernization"
+      ],
+      "skills": [
+        "framework-migration:angular-migration",
+        "framework-migration:database-migration",
+        "framework-migration:dependency-upgrade",
+        "framework-migration:react-modernization"
+      ],
+      "agents": [
+        "framework-migration:framework-migration-architect-review",
+        "framework-migration:framework-migration-legacy-modernizer"
+      ]
+    },
+    "frontend-mobile-development": {
+      "commands": [
+        "frontend-mobile-development:component-scaffold",
+        "frontend-mobile-development:nextjs-app-router-patterns",
+        "frontend-mobile-development:react-native-architecture",
+        "frontend-mobile-development:react-state-management",
+        "frontend-mobile-development:tailwind-design-system"
+      ],
+      "skills": [
+        "frontend-mobile-development:nextjs-app-router-patterns",
+        "frontend-mobile-development:react-native-architecture",
+        "frontend-mobile-development:react-state-management",
+        "frontend-mobile-development:tailwind-design-system"
+      ],
+      "agents": [
+        "frontend-mobile-development:frontend-mobile-development-frontend-developer",
+        "frontend-mobile-development:frontend-mobile-development-mobile-developer"
+      ]
+    },
+    "frontend-mobile-security": {
+      "commands": [
+        "frontend-mobile-security:xss-scan"
+      ],
+      "skills": [],
+      "agents": [
+        "frontend-mobile-security:frontend-mobile-security-frontend-developer",
+        "frontend-mobile-security:frontend-security-coder",
+        "frontend-mobile-security:mobile-security-coder"
+      ]
+    },
+    "full-stack-orchestration": {
+      "commands": [
+        "full-stack-orchestration:full-stack-feature"
+      ],
+      "skills": [],
+      "agents": [
+        "full-stack-orchestration:full-stack-orchestration-deployment-engineer",
+        "full-stack-orchestration:full-stack-orchestration-performance-engineer",
+        "full-stack-orchestration:full-stack-orchestration-security-auditor",
+        "full-stack-orchestration:full-stack-orchestration-test-automator"
+      ]
+    },
+    "functional-programming": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "functional-programming:elixir-pro",
+        "functional-programming:haskell-pro"
+      ]
+    },
+    "game-development": {
+      "commands": [
+        "game-development:godot-gdscript-patterns",
+        "game-development:unity-ecs-patterns"
+      ],
+      "skills": [
+        "game-development:godot-gdscript-patterns",
+        "game-development:unity-ecs-patterns"
+      ],
+      "agents": [
+        "game-development:minecraft-bukkit-pro",
+        "game-development:unity-developer"
+      ]
+    },
+    "git-pr-workflows": {
+      "commands": [
+        "git-pr-workflows:git-workflow",
+        "git-pr-workflows:onboard",
+        "git-pr-workflows:pr-enhance"
+      ],
+      "skills": [],
+      "agents": [
+        "git-pr-workflows:git-pr-workflows-code-reviewer"
+      ]
+    },
+    "hermes-tweet": {
+      "commands": [
+        "hermes-tweet:hermes-tweet"
+      ],
+      "skills": [
+        "hermes-tweet:hermes-tweet"
+      ],
+      "agents": []
+    },
+    "hr-legal-compliance": {
+      "commands": [
+        "hr-legal-compliance:employment-contract-templates",
+        "hr-legal-compliance:gdpr-data-handling"
+      ],
+      "skills": [
+        "hr-legal-compliance:employment-contract-templates",
+        "hr-legal-compliance:gdpr-data-handling"
+      ],
+      "agents": [
+        "hr-legal-compliance:hr-pro",
+        "hr-legal-compliance:legal-advisor"
+      ]
+    },
+    "incident-response": {
+      "commands": [
+        "incident-response:connectivity-triage",
+        "incident-response:incident-response",
+        "incident-response:incident-runbook-templates",
+        "incident-response:on-call-handoff-patterns",
+        "incident-response:postmortem-writing",
+        "incident-response:smart-fix"
+      ],
+      "skills": [
+        "incident-response:connectivity-triage",
+        "incident-response:incident-runbook-templates",
+        "incident-response:on-call-handoff-patterns",
+        "incident-response:postmortem-writing"
+      ],
+      "agents": [
+        "incident-response:incident-responder",
+        "incident-response:incident-response-code-reviewer",
+        "incident-response:incident-response-debugger",
+        "incident-response:incident-response-devops-troubleshooter",
+        "incident-response:incident-response-error-detective",
+        "incident-response:incident-response-test-automator"
+      ]
+    },
+    "javascript-typescript": {
+      "commands": [
+        "javascript-typescript:javascript-testing-patterns",
+        "javascript-typescript:modern-javascript-patterns",
+        "javascript-typescript:nodejs-backend-patterns",
+        "javascript-typescript:typescript-advanced-types",
+        "javascript-typescript:typescript-scaffold"
+      ],
+      "skills": [
+        "javascript-typescript:javascript-testing-patterns",
+        "javascript-typescript:modern-javascript-patterns",
+        "javascript-typescript:nodejs-backend-patterns",
+        "javascript-typescript:typescript-advanced-types"
+      ],
+      "agents": [
+        "javascript-typescript:javascript-pro",
+        "javascript-typescript:typescript-pro"
+      ]
+    },
+    "julia-development": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "julia-development:julia-pro"
+      ]
+    },
+    "jvm-languages": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "jvm-languages:csharp-pro",
+        "jvm-languages:java-pro",
+        "jvm-languages:scala-pro"
+      ]
+    },
+    "kubernetes-operations": {
+      "commands": [
+        "kubernetes-operations:gitops-workflow",
+        "kubernetes-operations:helm-chart-scaffolding",
+        "kubernetes-operations:k8s-manifest-generator",
+        "kubernetes-operations:k8s-security-policies"
+      ],
+      "skills": [
+        "kubernetes-operations:gitops-workflow",
+        "kubernetes-operations:helm-chart-scaffolding",
+        "kubernetes-operations:k8s-manifest-generator",
+        "kubernetes-operations:k8s-security-policies"
+      ],
+      "agents": [
+        "kubernetes-operations:kubernetes-operations-kubernetes-architect"
+      ]
+    },
+    "llm-application-dev": {
+      "commands": [
+        "llm-application-dev:ai-assistant",
+        "llm-application-dev:embedding-strategies",
+        "llm-application-dev:hybrid-search-implementation",
+        "llm-application-dev:langchain-agent",
+        "llm-application-dev:langchain-architecture",
+        "llm-application-dev:llm-evaluation",
+        "llm-application-dev:prompt-engineering-patterns",
+        "llm-application-dev:prompt-optimize",
+        "llm-application-dev:rag-implementation",
+        "llm-application-dev:similarity-search-patterns",
+        "llm-application-dev:vector-index-tuning"
+      ],
+      "skills": [
+        "llm-application-dev:embedding-strategies",
+        "llm-application-dev:hybrid-search-implementation",
+        "llm-application-dev:langchain-architecture",
+        "llm-application-dev:llm-evaluation",
+        "llm-application-dev:prompt-engineering-patterns",
+        "llm-application-dev:rag-implementation",
+        "llm-application-dev:similarity-search-patterns",
+        "llm-application-dev:vector-index-tuning"
+      ],
+      "agents": [
+        "llm-application-dev:ai-engineer",
+        "llm-application-dev:prompt-engineer",
+        "llm-application-dev:vector-database-engineer"
+      ]
+    },
+    "llm-finetuning": {
+      "commands": [
+        "llm-finetuning:checkpoint-promotion",
+        "llm-finetuning:dataset-curation",
+        "llm-finetuning:eval-harness-first",
+        "llm-finetuning:finetune",
+        "llm-finetuning:finetuning-method-selection",
+        "llm-finetuning:grpo-rlvr-training",
+        "llm-finetuning:lora-qlora-recipes",
+        "llm-finetuning:preference-optimization",
+        "llm-finetuning:promote-checkpoint",
+        "llm-finetuning:quantized-export",
+        "llm-finetuning:trace-to-training-data",
+        "llm-finetuning:vision-sft"
+      ],
+      "skills": [
+        "llm-finetuning:checkpoint-promotion",
+        "llm-finetuning:dataset-curation",
+        "llm-finetuning:eval-harness-first",
+        "llm-finetuning:finetuning-method-selection",
+        "llm-finetuning:grpo-rlvr-training",
+        "llm-finetuning:lora-qlora-recipes",
+        "llm-finetuning:preference-optimization",
+        "llm-finetuning:quantized-export",
+        "llm-finetuning:trace-to-training-data",
+        "llm-finetuning:vision-sft"
+      ],
+      "agents": [
+        "llm-finetuning:llm-finetuning-architect",
+        "llm-finetuning:llm-finetuning-eval-engineer",
+        "llm-finetuning:llm-finetuning-training-engineer"
+      ]
+    },
+    "machine-learning-ops": {
+      "commands": [
+        "machine-learning-ops:ml-pipeline",
+        "machine-learning-ops:ml-pipeline-workflow",
+        "machine-learning-ops:recsys-pipeline-architect"
+      ],
+      "skills": [
+        "machine-learning-ops:ml-pipeline-workflow",
+        "machine-learning-ops:recsys-pipeline-architect"
+      ],
+      "agents": [
+        "machine-learning-ops:data-scientist",
+        "machine-learning-ops:ml-engineer",
+        "machine-learning-ops:mlops-engineer"
+      ]
+    },
+    "meigen-ai-design": {
+      "commands": [
+        "meigen-ai-design:find",
+        "meigen-ai-design:gen"
+      ],
+      "skills": [],
+      "agents": [
+        "meigen-ai-design:gallery-researcher",
+        "meigen-ai-design:image-generator",
+        "meigen-ai-design:prompt-crafter"
+      ]
+    },
+    "multi-platform-apps": {
+      "commands": [
+        "multi-platform-apps:multi-platform"
+      ],
+      "skills": [],
+      "agents": [
+        "multi-platform-apps:flutter-expert",
+        "multi-platform-apps:ios-developer",
+        "multi-platform-apps:multi-platform-apps-backend-architect",
+        "multi-platform-apps:multi-platform-apps-frontend-developer",
+        "multi-platform-apps:multi-platform-apps-mobile-developer",
+        "multi-platform-apps:ui-ux-designer"
+      ]
+    },
+    "observability-monitoring": {
+      "commands": [
+        "observability-monitoring:distributed-tracing",
+        "observability-monitoring:grafana-dashboards",
+        "observability-monitoring:monitor-setup",
+        "observability-monitoring:prometheus-configuration",
+        "observability-monitoring:slo-implement",
+        "observability-monitoring:slo-implementation"
+      ],
+      "skills": [
+        "observability-monitoring:distributed-tracing",
+        "observability-monitoring:grafana-dashboards",
+        "observability-monitoring:prometheus-configuration",
+        "observability-monitoring:slo-implementation"
+      ],
+      "agents": [
+        "observability-monitoring:observability-monitoring-database-optimizer",
+        "observability-monitoring:observability-monitoring-network-engineer",
+        "observability-monitoring:observability-monitoring-observability-engineer",
+        "observability-monitoring:observability-monitoring-performance-engineer"
+      ]
+    },
+    "operating-kit": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "operating-kit:code-review-preshipment",
+        "operating-kit:deploy-with-verification",
+        "operating-kit:prod-logs-health-check",
+        "operating-kit:session-end",
+        "operating-kit:session-start"
+      ]
+    },
+    "payment-processing": {
+      "commands": [
+        "payment-processing:billing-automation",
+        "payment-processing:paypal-integration",
+        "payment-processing:pci-compliance",
+        "payment-processing:stripe-integration"
+      ],
+      "skills": [
+        "payment-processing:billing-automation",
+        "payment-processing:paypal-integration",
+        "payment-processing:pci-compliance",
+        "payment-processing:stripe-integration"
+      ],
+      "agents": [
+        "payment-processing:payment-integration"
+      ]
+    },
+    "performance-testing-review": {
+      "commands": [
+        "performance-testing-review:ai-review",
+        "performance-testing-review:multi-agent-review"
+      ],
+      "skills": [],
+      "agents": [
+        "performance-testing-review:performance-testing-review-performance-engineer",
+        "performance-testing-review:performance-testing-review-test-automator"
+      ]
+    },
+    "plugin-eval": {
+      "commands": [
+        "plugin-eval:certify",
+        "plugin-eval:compare",
+        "plugin-eval:eval",
+        "plugin-eval:evaluation-methodology"
+      ],
+      "skills": [
+        "plugin-eval:evaluation-methodology"
+      ],
+      "agents": [
+        "plugin-eval:eval-judge",
+        "plugin-eval:eval-orchestrator"
+      ]
+    },
+    "pptx-deck-creation": {
+      "commands": [
+        "pptx-deck-creation:pptx-deck-context",
+        "pptx-deck-creation:pptx-quality-gates",
+        "pptx-deck-creation:pptx-reference-deck-analysis",
+        "pptx-deck-creation:pptx-slide-specification",
+        "pptx-deck-creation:pptx-visual-assets"
+      ],
+      "skills": [
+        "pptx-deck-creation:pptx-deck-context",
+        "pptx-deck-creation:pptx-quality-gates",
+        "pptx-deck-creation:pptx-reference-deck-analysis",
+        "pptx-deck-creation:pptx-slide-specification",
+        "pptx-deck-creation:pptx-visual-assets"
+      ],
+      "agents": [
+        "pptx-deck-creation:pptx-deck-creation-builder"
+      ]
+    },
+    "protect-mcp": {
+      "commands": [
+        "protect-mcp:audit-chain",
+        "protect-mcp:protect-mcp-setup",
+        "protect-mcp:verify-receipt"
+      ],
+      "skills": [
+        "protect-mcp:protect-mcp-setup"
+      ],
+      "agents": [
+        "protect-mcp:policy-enforcer",
+        "protect-mcp:receipt-verifier"
+      ]
+    },
+    "python-development": {
+      "commands": [
+        "python-development:async-python-patterns",
+        "python-development:python-anti-patterns",
+        "python-development:python-background-jobs",
+        "python-development:python-code-style",
+        "python-development:python-configuration",
+        "python-development:python-design-patterns",
+        "python-development:python-error-handling",
+        "python-development:python-observability",
+        "python-development:python-packaging",
+        "python-development:python-performance-optimization",
+        "python-development:python-project-structure",
+        "python-development:python-resilience",
+        "python-development:python-resource-management",
+        "python-development:python-scaffold",
+        "python-development:python-testing-patterns",
+        "python-development:python-type-safety",
+        "python-development:uv-package-manager"
+      ],
+      "skills": [
+        "python-development:async-python-patterns",
+        "python-development:python-anti-patterns",
+        "python-development:python-background-jobs",
+        "python-development:python-code-style",
+        "python-development:python-configuration",
+        "python-development:python-design-patterns",
+        "python-development:python-error-handling",
+        "python-development:python-observability",
+        "python-development:python-packaging",
+        "python-development:python-performance-optimization",
+        "python-development:python-project-structure",
+        "python-development:python-resilience",
+        "python-development:python-resource-management",
+        "python-development:python-testing-patterns",
+        "python-development:python-type-safety",
+        "python-development:uv-package-manager"
+      ],
+      "agents": [
+        "python-development:python-development-django-pro",
+        "python-development:python-development-fastapi-pro",
+        "python-development:python-pro"
+      ]
+    },
+    "quantitative-trading": {
+      "commands": [
+        "quantitative-trading:backtesting-frameworks",
+        "quantitative-trading:risk-metrics-calculation"
+      ],
+      "skills": [
+        "quantitative-trading:backtesting-frameworks",
+        "quantitative-trading:risk-metrics-calculation"
+      ],
+      "agents": [
+        "quantitative-trading:quant-analyst",
+        "quantitative-trading:risk-manager"
+      ]
+    },
+    "reverse-engineering": {
+      "commands": [
+        "reverse-engineering:anti-reversing-techniques",
+        "reverse-engineering:binary-analysis-patterns",
+        "reverse-engineering:memory-forensics",
+        "reverse-engineering:protocol-reverse-engineering"
+      ],
+      "skills": [
+        "reverse-engineering:anti-reversing-techniques",
+        "reverse-engineering:binary-analysis-patterns",
+        "reverse-engineering:memory-forensics",
+        "reverse-engineering:protocol-reverse-engineering"
+      ],
+      "agents": [
+        "reverse-engineering:firmware-analyst",
+        "reverse-engineering:malware-analyst",
+        "reverse-engineering:reverse-engineer"
+      ]
+    },
+    "review-agent-governance": {
+      "commands": [
+        "review-agent-governance:approve-review",
+        "review-agent-governance:list-pending",
+        "review-agent-governance:review-agent-setup"
+      ],
+      "skills": [
+        "review-agent-governance:review-agent-setup"
+      ],
+      "agents": [
+        "review-agent-governance:review-policy-author"
+      ]
+    },
+    "security-compliance": {
+      "commands": [
+        "security-compliance:compliance-check"
+      ],
+      "skills": [],
+      "agents": [
+        "security-compliance:security-compliance-security-auditor"
+      ]
+    },
+    "security-scanning": {
+      "commands": [
+        "security-scanning:attack-tree-construction",
+        "security-scanning:sast-configuration",
+        "security-scanning:security-dependencies",
+        "security-scanning:security-hardening",
+        "security-scanning:security-requirement-extraction",
+        "security-scanning:security-sast",
+        "security-scanning:stride-analysis-patterns",
+        "security-scanning:threat-mitigation-mapping"
+      ],
+      "skills": [
+        "security-scanning:attack-tree-construction",
+        "security-scanning:sast-configuration",
+        "security-scanning:security-requirement-extraction",
+        "security-scanning:stride-analysis-patterns",
+        "security-scanning:threat-mitigation-mapping"
+      ],
+      "agents": [
+        "security-scanning:security-scanning-security-auditor",
+        "security-scanning:threat-modeling-expert"
+      ]
+    },
+    "seo-analysis-monitoring": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "seo-analysis-monitoring:seo-authority-builder",
+        "seo-analysis-monitoring:seo-cannibalization-detector",
+        "seo-analysis-monitoring:seo-content-refresher"
+      ]
+    },
+    "seo-content-creation": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "seo-content-creation:seo-content-auditor",
+        "seo-content-creation:seo-content-planner",
+        "seo-content-creation:seo-content-writer"
+      ]
+    },
+    "seo-technical-optimization": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "seo-technical-optimization:seo-keyword-strategist",
+        "seo-technical-optimization:seo-meta-optimizer",
+        "seo-technical-optimization:seo-snippet-hunter",
+        "seo-technical-optimization:seo-structure-architect"
+      ]
+    },
+    "shell-scripting": {
+      "commands": [
+        "shell-scripting:bash-defensive-patterns",
+        "shell-scripting:bats-testing-patterns",
+        "shell-scripting:shellcheck-configuration"
+      ],
+      "skills": [
+        "shell-scripting:bash-defensive-patterns",
+        "shell-scripting:bats-testing-patterns",
+        "shell-scripting:shellcheck-configuration"
+      ],
+      "agents": [
+        "shell-scripting:bash-pro",
+        "shell-scripting:posix-shell-pro"
+      ]
+    },
+    "ship-mate": {
+      "commands": [
+        "ship-mate:scan",
+        "ship-mate:setup",
+        "ship-mate:ship"
+      ],
+      "skills": [
+        "ship-mate:scan"
+      ],
+      "agents": [
+        "ship-mate:architect",
+        "ship-mate:implement",
+        "ship-mate:orchestrate",
+        "ship-mate:playwright",
+        "ship-mate:qa",
+        "ship-mate:review"
+      ]
+    },
+    "signed-audit-trails": {
+      "commands": [
+        "signed-audit-trails:signed-audit-trails-recipe"
+      ],
+      "skills": [
+        "signed-audit-trails:signed-audit-trails-recipe"
+      ],
+      "agents": []
+    },
+    "skill-forge-essentials": {
+      "commands": [
+        "skill-forge-essentials:ai-debt-detector",
+        "skill-forge-essentials:session-guard",
+        "skill-forge-essentials:visual-edit-precision"
+      ],
+      "skills": [
+        "skill-forge-essentials:ai-debt-detector",
+        "skill-forge-essentials:session-guard",
+        "skill-forge-essentials:visual-edit-precision"
+      ],
+      "agents": []
+    },
+    "social-publishing": {
+      "commands": [
+        "social-publishing:social-publishing"
+      ],
+      "skills": [
+        "social-publishing:social-publishing"
+      ],
+      "agents": [
+        "social-publishing:social-publishing-publisher"
+      ]
+    },
+    "startup-business-analyst": {
+      "commands": [
+        "startup-business-analyst:business-case",
+        "startup-business-analyst:competitive-landscape",
+        "startup-business-analyst:financial-projections",
+        "startup-business-analyst:market-opportunity",
+        "startup-business-analyst:market-sizing-analysis",
+        "startup-business-analyst:startup-financial-modeling",
+        "startup-business-analyst:startup-metrics-framework",
+        "startup-business-analyst:team-composition-analysis"
+      ],
+      "skills": [
+        "startup-business-analyst:competitive-landscape",
+        "startup-business-analyst:market-sizing-analysis",
+        "startup-business-analyst:startup-financial-modeling",
+        "startup-business-analyst:startup-metrics-framework",
+        "startup-business-analyst:team-composition-analysis"
+      ],
+      "agents": [
+        "startup-business-analyst:startup-analyst"
+      ]
+    },
+    "superself": {
+      "commands": [
+        "superself:superself"
+      ],
+      "skills": [
+        "superself:superself"
+      ],
+      "agents": []
+    },
+    "systems-programming": {
+      "commands": [
+        "systems-programming:go-concurrency-patterns",
+        "systems-programming:memory-safety-patterns",
+        "systems-programming:rust-async-patterns",
+        "systems-programming:rust-project"
+      ],
+      "skills": [
+        "systems-programming:go-concurrency-patterns",
+        "systems-programming:memory-safety-patterns",
+        "systems-programming:rust-async-patterns"
+      ],
+      "agents": [
+        "systems-programming:c-pro",
+        "systems-programming:cpp-pro",
+        "systems-programming:golang-pro",
+        "systems-programming:rust-pro"
+      ]
+    },
+    "tdd-workflows": {
+      "commands": [
+        "tdd-workflows:tdd-cycle",
+        "tdd-workflows:tdd-green",
+        "tdd-workflows:tdd-red",
+        "tdd-workflows:tdd-refactor"
+      ],
+      "skills": [],
+      "agents": [
+        "tdd-workflows:tdd-workflows-code-reviewer",
+        "tdd-workflows:tdd-workflows-tdd-orchestrator"
+      ]
+    },
+    "team-collaboration": {
+      "commands": [
+        "team-collaboration:issue",
+        "team-collaboration:standup-notes"
+      ],
+      "skills": [],
+      "agents": [
+        "team-collaboration:team-collaboration-dx-optimizer"
+      ]
+    },
+    "ui-design": {
+      "commands": [
+        "ui-design:accessibility-audit",
+        "ui-design:accessibility-compliance",
+        "ui-design:create-component",
+        "ui-design:design-review",
+        "ui-design:design-system-patterns",
+        "ui-design:design-system-setup",
+        "ui-design:interaction-design",
+        "ui-design:mobile-android-design",
+        "ui-design:mobile-ios-design",
+        "ui-design:react-native-design",
+        "ui-design:responsive-design",
+        "ui-design:visual-design-foundations",
+        "ui-design:web-component-design"
+      ],
+      "skills": [
+        "ui-design:accessibility-compliance",
+        "ui-design:design-system-patterns",
+        "ui-design:interaction-design",
+        "ui-design:mobile-android-design",
+        "ui-design:mobile-ios-design",
+        "ui-design:react-native-design",
+        "ui-design:responsive-design",
+        "ui-design:visual-design-foundations",
+        "ui-design:web-component-design"
+      ],
+      "agents": [
+        "ui-design:accessibility-expert",
+        "ui-design:design-system-architect",
+        "ui-design:ui-designer"
+      ]
+    },
+    "unit-testing": {
+      "commands": [
+        "unit-testing:test-generate"
+      ],
+      "skills": [],
+      "agents": [
+        "unit-testing:unit-testing-debugger",
+        "unit-testing:unit-testing-test-automator"
+      ]
+    },
+    "web-scripting": {
+      "commands": [],
+      "skills": [],
+      "agents": [
+        "web-scripting:php-pro",
+        "web-scripting:ruby-pro"
+      ]
+    }
+  }
+}
