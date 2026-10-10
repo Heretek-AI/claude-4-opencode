@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { REPO, Sandbox, type Server } from "../lib/sandbox.ts"
 import { lastToolResult, lastUserText, systemText, toolNames, type Step } from "../lib/stub-llm.ts"
+import { dataDirectory, storePaths } from "../../src/store/paths.ts"
 
 /**
  * The probe plugin is a fixture whose every component has one observable effect, so these tests
@@ -171,7 +172,8 @@ describe("probe plugin", () => {
     )
     const child = requests[1]!
     expect(systemText(child)).toContain("PROBE_AGENT_PROMPT: You only read files.")
-    expect(systemText(child)).toContain(path.join(sandbox.env.C4O_HOME!, "data", "probe-inline"))
+    // Data dir uses the collision-free encoding (e.g. probe@inline -> probe-40-inline).
+    expect(systemText(child)).toContain(dataDirectory(storePaths(sandbox.env), "probe@inline"))
     expect(lastUserText(child)).toContain("Read the README")
     if (process.env.C4O_E2E_DEBUG)
       console.log("child tools:", toolNames(child).join(", "), "| write result:", lastToolResult(requests[2]!))
