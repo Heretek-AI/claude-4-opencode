@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store
+
+# Third-party reference source used during development. Never committed.
+review/
+
+# E2E scratch: sandboxes, cloned marketplaces, reports
+.e2e/
