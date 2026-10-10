@@ -9,7 +9,7 @@
     "url": "git+https://github.com/Heretek-AI/claude-4-opencode.git"
   },
   "bin": {
-    "c4o": "./dist/cli.js"
+    "c4o": "dist/cli.js"
   },
   "exports": {
     ".": "./dist/server.js",
