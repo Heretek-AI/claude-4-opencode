@@ -1,6 +1,6 @@
 {
   "name": "@heretek-ai/claude-4-opencode",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Run Claude Code plugins and marketplaces on opencode v2",
   "license": "MIT",
   "type": "module",
