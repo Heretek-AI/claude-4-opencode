@@ -1,0 +1,8 @@
+dist/
+node_modules/
+review/
+.e2e/
+bun.lock
+e2e/golden/
+COMPATIBILITY.md
+e2e/fixtures/
