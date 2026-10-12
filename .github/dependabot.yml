@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: bun
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      # The opencode version is pinned in four places that move together. See AGENTS.md.
+      - dependency-name: "@opencode/*"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+reviews:
+  profile: chill
+  poem: false
+  review_status: false
+  # Generated or recorded files: reviewed by the commands that produce them.
+  path_filters:
+    - "!bun.lock"
+    - "!COMPATIBILITY.md"
+    - "!e2e/golden/**"
+    - "!e2e/targets.lock.json"
+  auto_review:
+    enabled: true
+    drafts: false
