@@ -33,7 +33,7 @@ export async function bindHooks(
   ctx: Plugin.Context,
   state: { plugins: ActivePlugin[] },
   options: HookOptions,
-): Promise<() => void> {
+): Promise<() => Promise<void>> {
   const sessions = new Map<string, SessionState>()
   /** Sessions whose next prompt is one this plugin sent, which must not trigger UserPromptSubmit. */
   const internalPrompts = new Set<string>()
@@ -222,6 +222,8 @@ export async function bindHooks(
     if (!hasHooks(state.plugins, name)) return
     const session = sessionState(sessionID)
     const outcome = await run(sessionID, { event: name, payload: { stop_hook_active: session.stopActive } })
+    // Disposal may have landed while run() was suspended; do not prompt after teardown.
+    if (disposed) return
     // The parent has already consumed a subagent's result, so a child cannot be made to continue.
     if (outcome.blocked === undefined || child) {
       session.stopActive = false
@@ -241,12 +243,11 @@ export async function bindHooks(
     }
   })().catch((error) => debug("event stream ended", { error: String(error) }))
 
-  return () => {
+  return async () => {
     disposed = true
-    // Drift C: `void` dispose is intentional. Upstream `dispose()` is sync-void; making unwind
-    // async would change the `Plugin.setup` return contract. `disposed=true` plus the event-stream
-    // guard above is the correct teardown.
-    for (const registration of registrations) void registration.dispose()
+    // Cleanup may be async: await registration disposals so hooks are
+    // unregistered before the host considers teardown complete.
+    await Promise.all(registrations.map((registration) => registration.dispose()))
   }
 }
 

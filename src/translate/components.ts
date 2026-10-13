@@ -92,9 +92,10 @@ export function toMcp(server: McpServerDef, context: VarContext, env: Record<str
   const expandAll = (record: Record<string, string>) =>
     Object.fromEntries(Object.entries(record).map(([key, value]) => [key, expand(value)]))
   if (server.type === "stdio") {
-    // Drift D-2: `cwd`/`timeout` are retained on McpServerDef for reporting but not forwarded —
-    // OpencodeMcp local has no such keys, and a shell-wrapper would break tool routing. Absolute
-    // `${CLAUDE_PLUGIN_ROOT}` expansion (drift E) already covers the common cwd use.
+    // Drift D-2: `cwd`/`timeout` are retained on McpServerDef for reporting but not forwarded by
+    // this adapter — opencode defines both, but OpencodeMcp local omits them and a shell-wrapper
+    // would break tool routing. Absolute `${CLAUDE_PLUGIN_ROOT}` expansion (drift E) already
+    // covers the common cwd use.
     // Drift F: pluginEnvironment is an intentional Claude-parity superset opencode does not provide.
     return {
       type: "local",

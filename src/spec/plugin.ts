@@ -647,7 +647,13 @@ function readMcpMap(map: Record<string, unknown>, context: Context): Record<stri
         ...(cwd === undefined ? {} : { cwd }),
         ...(timeout === undefined ? {} : { timeout }),
       }
-      warnUntranslatedMcp(name, config, ["command", "args", "env", "cwd", "timeout", "type"], context)
+      warnUntranslatedMcp(
+        name,
+        config,
+        ["command", "args", "env", "cwd", "timeout", "type"],
+        ["cwd", "timeout"],
+        context,
+      )
       continue
     }
     if (url !== undefined) {
@@ -659,7 +665,7 @@ function readMcpMap(map: Record<string, unknown>, context: Context): Record<stri
         headers: stringRecord(config.headers),
         ...(timeout === undefined ? {} : { timeout }),
       }
-      warnUntranslatedMcp(name, config, ["command", "url", "headers", "type", "timeout"], context)
+      warnUntranslatedMcp(name, config, ["command", "url", "headers", "type", "timeout"], ["timeout"], context)
       continue
     }
     // Marketplaces ship connector placeholders with an empty url for the user to fill in.
@@ -710,32 +716,34 @@ function asTimeout(value: unknown): number | undefined {
 }
 
 /**
- * opencode local/remote MCP has no `cwd`, `disabled`, `codemode`, `protocol`, or `oauth` surface.
- * `cwd`/`timeout` are retained on the def for reporting; everything else is reported and ignored
- * instead of being silently dropped (drift D).
+ * `cwd`, `disabled`, `codemode`, `protocol`, and `oauth` are defined by opencode but omitted
+ * from this adapter's translation. `cwd`/`timeout` are retained on the def for reporting;
+ * everything else is reported and ignored instead of being silently dropped (drift D).
  */
-function warnUntranslatedMcp(name: string, config: Record<string, unknown>, known: string[], context: Context) {
+function warnUntranslatedMcp(
+  name: string,
+  config: Record<string, unknown>,
+  known: string[],
+  retained: string[],
+  context: Context,
+) {
   const knownSet = new Set(known)
   for (const key of Object.keys(config)) {
     if (knownSet.has(key)) continue
     // `env` values using native `{env:VAR}` are a separate divergence (drift E); still report the key.
     context.issues.push({
       level: "warning",
-      message: `MCP server ${name} sets ${key} which has no opencode equivalent and is ignored`,
+      message: `MCP server ${name} sets ${key} which is not forwarded by this adapter and is ignored`,
     })
   }
-  const def = (value: unknown) => value !== undefined
-  if (def(asString(config.cwd)) || def(asTimeout(config.timeout))) {
-    const kept = [
-      asString(config.cwd) === undefined ? undefined : "cwd",
-      asTimeout(config.timeout) === undefined ? undefined : "timeout",
-    ].filter((item): item is string => item !== undefined)
-    if (kept.length > 0)
-      context.issues.push({
-        level: "warning",
-        message: `MCP server ${name} sets ${kept.join("/")} which is retained but not forwarded to opencode`,
-      })
-  }
+  const kept = retained.filter((key) =>
+    key === "cwd" ? asString(config.cwd) !== undefined : asTimeout(config[key]) !== undefined,
+  )
+  if (kept.length > 0)
+    context.issues.push({
+      level: "warning",
+      message: `MCP server ${name} sets ${kept.join("/")} which is retained but not forwarded to opencode`,
+    })
 }
 
 function stringRecord(value: unknown): Record<string, string> {

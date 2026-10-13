@@ -89,16 +89,16 @@ export type McpServerDef =
       command: string
       args: string[]
       env: Record<string, string>
-      /** Retained from the manifest but not forwarded: opencode local MCP has no `cwd` field. */
+      /** Retained from the manifest but not forwarded by this adapter (opencode defines `cwd`). */
       cwd?: string
-      /** Retained from the manifest but not forwarded: opencode MCP has no per-server `timeout`. */
+      /** Retained from the manifest but not forwarded by this adapter (opencode defines per-server `timeout`). */
       timeout?: number
     }
   | {
       type: "http" | "sse" | "ws"
       url: string
       headers: Record<string, string>
-      /** Retained from the manifest but not forwarded: opencode MCP has no per-server `timeout`. */
+      /** Retained from the manifest but not forwarded by this adapter (opencode defines per-server `timeout`). */
       timeout?: number
     }
 
