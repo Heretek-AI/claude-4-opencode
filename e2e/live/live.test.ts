@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { execFileSync } from "node:child_process"
+import { copyFileSync, existsSync } from "node:fs"
 import path from "node:path"
 import { REPO } from "../lib/repo.ts"
 import { Sandbox, type RunEvent } from "../lib/sandbox.ts"
@@ -55,7 +56,13 @@ describe.skipIf(Object.keys(keys).length === 0)("live model", () => {
     await sandbox.c4o("install", "frontend-design@claude-plugins-official")
   }, 300_000)
 
-  afterAll(() => sandbox?.dispose())
+  afterAll(async () => {
+    const reportDir = path.join(REPO, ".e2e", "report")
+    if (sandbox && existsSync(reportDir) && existsSync(sandbox.logFile)) {
+      copyFileSync(sandbox.logFile, path.join(reportDir, "c4o-live.log"))
+    }
+    await sandbox?.dispose()
+  })
 
   /** Runs the prompt until `accept` is satisfied by the event stream, up to ATTEMPTS times. */
   async function attempt(prompt: string, accept: (events: RunEvent[]) => boolean): Promise<RunEvent[]> {
@@ -63,11 +70,14 @@ describe.skipIf(Object.keys(keys).length === 0)("live model", () => {
     for (let index = 0; index < ATTEMPTS; index++) {
       events = (await sandbox.run(prompt, { timeoutMs: 240_000 })).events
       if (accept(events)) return events
+      const toolsUsed =
+        tools(events)
+          .map((item) => item.tool)
+          .join(", ") || "none"
+      const textSnippet = text(events).replace(/\s+/g, " ").trim().slice(0, 200)
       console.log(
-        `attempt ${index + 1} did not satisfy the scenario; tools used: ${
-          tools(events)
-            .map((item) => item.tool)
-            .join(", ") || "none"
+        `attempt ${index + 1} did not satisfy the scenario; tools used: ${toolsUsed}${
+          textSnippet ? `; text: "${textSnippet}"` : ""
         }`,
       )
     }
