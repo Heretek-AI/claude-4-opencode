@@ -77,12 +77,14 @@ describe.skipIf(Object.keys(keys).length === 0)("live model", () => {
           .join(", ") || "none"
       const textSnippet = text(events).replace(/\s+/g, " ").trim().slice(0, 200)
       const err = result.stderr ? `; stderr: ${result.stderr.trim().slice(0, 300)}` : ""
+      const errEvent = events.find((e) => e.type === "error" || (e.error !== undefined && e.error !== null))
+      const errDetail = errEvent ? `; error: ${JSON.stringify(errEvent)}` : ""
       const eventSummary =
         events.length === 0 ? "; events: none" : `; events(${events.length}): ${events.map((e) => e.type).join(",")}`
       console.log(
         `attempt ${index + 1} did not satisfy the scenario; code: ${result.code}; tools: ${toolsUsed}${
           textSnippet ? `; text: "${textSnippet}"` : ""
-        }${err}${eventSummary}`,
+        }${err}${eventSummary}${errDetail}`,
       )
     }
     return events
