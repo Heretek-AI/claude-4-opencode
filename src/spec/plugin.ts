@@ -637,12 +637,29 @@ function readMcpMap(map: Record<string, unknown>, context: Context): Record<stri
     const command = asString(config.command)
     const url = asString(config.url)
     if (command !== undefined) {
-      result[name] = { type: "stdio", command, args: stringArray(config.args), env: stringRecord(config.env) }
+      const cwd = asString(config.cwd)
+      const timeout = asTimeout(config.timeout)
+      result[name] = {
+        type: "stdio",
+        command,
+        args: stringArray(config.args),
+        env: stringRecord(config.env),
+        ...(cwd === undefined ? {} : { cwd }),
+        ...(timeout === undefined ? {} : { timeout }),
+      }
+      warnUntranslatedMcp(name, config, ["command", "args", "env", "cwd", "timeout", "type"], context)
       continue
     }
     if (url !== undefined) {
       const type = config.type === "sse" || config.type === "ws" ? config.type : "http"
-      result[name] = { type, url, headers: stringRecord(config.headers) }
+      const timeout = asTimeout(config.timeout)
+      result[name] = {
+        type,
+        url,
+        headers: stringRecord(config.headers),
+        ...(timeout === undefined ? {} : { timeout }),
+      }
+      warnUntranslatedMcp(name, config, ["command", "url", "headers", "type", "timeout"], context)
       continue
     }
     // Marketplaces ship connector placeholders with an empty url for the user to fill in.
@@ -681,6 +698,44 @@ function readLspMap(value: unknown, context: Context): Record<string, LspServerD
 
 function stringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : []
+}
+
+function asTimeout(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value) && value >= 0) return value
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value.trim())
+    if (Number.isFinite(parsed) && parsed >= 0) return parsed
+  }
+  return undefined
+}
+
+/**
+ * opencode local/remote MCP has no `cwd`, `disabled`, `codemode`, `protocol`, or `oauth` surface.
+ * `cwd`/`timeout` are retained on the def for reporting; everything else is reported and ignored
+ * instead of being silently dropped (drift D).
+ */
+function warnUntranslatedMcp(name: string, config: Record<string, unknown>, known: string[], context: Context) {
+  const knownSet = new Set(known)
+  for (const key of Object.keys(config)) {
+    if (knownSet.has(key)) continue
+    // `env` values using native `{env:VAR}` are a separate divergence (drift E); still report the key.
+    context.issues.push({
+      level: "warning",
+      message: `MCP server ${name} sets ${key} which has no opencode equivalent and is ignored`,
+    })
+  }
+  const def = (value: unknown) => value !== undefined
+  if (def(asString(config.cwd)) || def(asTimeout(config.timeout))) {
+    const kept = [
+      asString(config.cwd) === undefined ? undefined : "cwd",
+      asTimeout(config.timeout) === undefined ? undefined : "timeout",
+    ].filter((item): item is string => item !== undefined)
+    if (kept.length > 0)
+      context.issues.push({
+        level: "warning",
+        message: `MCP server ${name} sets ${kept.join("/")} which is retained but not forwarded to opencode`,
+      })
+  }
 }
 
 function stringRecord(value: unknown): Record<string, string> {

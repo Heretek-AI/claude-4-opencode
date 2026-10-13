@@ -40,6 +40,10 @@ export interface OpencodeAgent {
 /**
  * Claude model aliases (`sonnet`, `opus`, `inherit`) have no provider-neutral meaning in opencode,
  * so translated agents inherit the session's model.
+ *
+ * Drift G: `permissions` only covers built-in tools. MCP/plugin tool names (`mcp__*`) map to
+ * nothing and grant nothing (fail-closed). Mapping them to `shell`/`read` would over-privilege
+ * read-only agents, so an allowlist mentioning MCP tools stays deny-all until an opt-in exists.
  */
 export function toAgent(agent: AgentDef, context: VarContext): OpencodeAgent {
   return {
@@ -88,6 +92,10 @@ export function toMcp(server: McpServerDef, context: VarContext, env: Record<str
   const expandAll = (record: Record<string, string>) =>
     Object.fromEntries(Object.entries(record).map(([key, value]) => [key, expand(value)]))
   if (server.type === "stdio") {
+    // Drift D-2: `cwd`/`timeout` are retained on McpServerDef for reporting but not forwarded —
+    // OpencodeMcp local has no such keys, and a shell-wrapper would break tool routing. Absolute
+    // `${CLAUDE_PLUGIN_ROOT}` expansion (drift E) already covers the common cwd use.
+    // Drift F: pluginEnvironment is an intentional Claude-parity superset opencode does not provide.
     return {
       type: "local",
       command: [expand(server.command), ...server.args.map(expand)],

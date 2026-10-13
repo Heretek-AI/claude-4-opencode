@@ -153,7 +153,9 @@ export async function bindHooks(
       // On failure there is no result to extend (`execute.after` cannot fail,
       // so throwing is not a channel). The mutated error is what the model
       // sees for a failed tool call, so the feedback rides along with it.
-      const text = feedback.join("\n\n")
+      // Drift I: `error` is not marked mutable upstream; this relies on object identity and is
+      // guarded, with a pinned E2E path for the completed-result case only.
+      const text = feedback.join("\n\n").slice(0, 2000)
       debug("hook feedback on failed tool", { tool: event.tool, feedback: text.slice(0, 2000) })
       try {
         const previous = event.error.message
@@ -169,6 +171,9 @@ export async function bindHooks(
       session.stopActive = false
       if (!hasHooks(state.plugins, "UserPromptSubmit") || (await isChild(event.sessionID))) return
       const outcome = await run(event.sessionID, { event: "UserPromptSubmit", payload: { prompt: event.prompt.text } })
+      // Drift J: opencode v2 session hooks are NoFailures — throwing keeps the prompt out but the
+      // API answers HTTP 500 with an empty body, so the block reason never reaches the caller.
+      // This is the only channel; do not replace with context-append (lets blocked prompts through).
       if (outcome.blocked !== undefined) throw new Error(outcome.blocked)
       if (outcome.context.length > 0) event.prompt.text += `\n\n${reminder(outcome.context)}`
     }),
@@ -238,6 +243,9 @@ export async function bindHooks(
 
   return () => {
     disposed = true
+    // Drift C: `void` dispose is intentional. Upstream `dispose()` is sync-void; making unwind
+    // async would change the `Plugin.setup` return contract. `disposed=true` plus the event-stream
+    // guard above is the correct teardown.
     for (const registration of registrations) void registration.dispose()
   }
 }

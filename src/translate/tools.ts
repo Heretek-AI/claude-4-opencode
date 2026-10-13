@@ -7,6 +7,7 @@
  * opencode permission action for each Claude tool an agent may list in `tools`.
  * Tools absent here grant nothing: `BashOutput` and `KillShell` only manage existing shells,
  * and mapping them to `shell` would let a read-only agent run commands.
+ * Drift G: MCP/plugin tools (`mcp__*`) are also absent by design (fail-closed, see `toAgent`).
  */
 const ACTIONS: Record<string, string[]> = {
   Read: ["read"],
@@ -69,6 +70,10 @@ const pick = (input: Input, mapping: Record<string, string>): Input =>
   )
 
 const FIELDS: Record<string, { claude: string; fields: Record<string, string> }> = {
+  // Drift A: shell `workdir` has no Claude counterpart and is intentionally unmapped. `toClaudeToolCall`
+  // drops it (pinned by test) so matchers never see it, while `applyUpdatedInput` preserves it via
+  // spread so hooks cannot clobber it. Forwarding it as `working_directory` would require a reverse
+  // map plus fixture updates and is out of scope.
   shell: { claude: "Bash", fields: { command: "command", timeout: "timeout", background: "run_in_background" } },
   read: { claude: "Read", fields: { path: "file_path", offset: "offset", limit: "limit" } },
   write: { claude: "Write", fields: { path: "file_path", content: "content" } },

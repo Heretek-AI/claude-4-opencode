@@ -150,6 +150,8 @@ const plugin: Plugin.Plugin = {
       clearTimeout(timer)
       watcher.close()
       unbindHooks()
+      // Drift C: `void` dispose is intentional; `ctx.shell` dispose is sync-void and `unbindHooks`
+      // is sync by contract. Awaiting here would change the plugin return type.
       void shell.dispose()
     }
   },
