@@ -146,11 +146,11 @@ const plugin: Plugin.Plugin = {
       timer = setTimeout(() => void reload().catch((error) => debug("reload failed", { error: String(error) })), 150)
     })
 
-    return () => {
+    return async () => {
       clearTimeout(timer)
       watcher.close()
-      unbindHooks()
-      void shell.dispose()
+      await unbindHooks()
+      await shell.dispose()
     }
   },
 }

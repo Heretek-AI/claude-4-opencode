@@ -240,6 +240,25 @@ test("an MCP placeholder with an empty url is skipped with a warning, not an err
   expect(plugin.issues).toEqual([{ level: "warning", message: "MCP server gmail has an empty url and was skipped" }])
 })
 
+test("MCP cwd/timeout are retained but warned, unknown keys are warned and ignored", () => {
+  const root = tree({
+    ".mcp.json": {
+      mcpServers: {
+        local: { command: "node", args: ["s.js"], env: {}, cwd: "/tmp", timeout: 30, disabled: true },
+        remote: { type: "http", url: "https://x.test/mcp", timeout: "45", oauth: "x" },
+      },
+    },
+  })
+  const plugin = loadPlugin({ root })
+  expect(plugin.mcpServers.local).toMatchObject({ type: "stdio", command: "node", cwd: "/tmp", timeout: 30 })
+  expect(plugin.mcpServers.remote).toMatchObject({ type: "http", timeout: 45 })
+  const messages = plugin.issues.map((issue) => issue.message)
+  expect(messages.some((message) => message.includes("local") && message.includes("disabled"))).toBe(true)
+  expect(messages.some((message) => message.includes("local") && message.includes("cwd"))).toBe(true)
+  expect(messages.some((message) => message.includes("remote") && message.includes("oauth"))).toBe(true)
+  expect(plugin.issues.every((issue) => issue.level === "warning")).toBe(true)
+})
+
 test("entry mcpServers and lspServers apply only when the entry is the manifest", () => {
   const servers = { mcpServers: { extra: { command: "node", args: ["x.js"] } } }
   const withManifest = tree({ ".claude-plugin/plugin.json": { name: "p" } })

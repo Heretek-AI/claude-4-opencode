@@ -84,8 +84,23 @@ export interface HookMatcher {
 export type HookConfig = Record<string, HookMatcher[]>
 
 export type McpServerDef =
-  | { type: "stdio"; command: string; args: string[]; env: Record<string, string> }
-  | { type: "http" | "sse" | "ws"; url: string; headers: Record<string, string> }
+  | {
+      type: "stdio"
+      command: string
+      args: string[]
+      env: Record<string, string>
+      /** Retained from the manifest but not forwarded by this adapter (opencode defines `cwd`). */
+      cwd?: string
+      /** Retained from the manifest but not forwarded by this adapter (opencode defines per-server `timeout`). */
+      timeout?: number
+    }
+  | {
+      type: "http" | "sse" | "ws"
+      url: string
+      headers: Record<string, string>
+      /** Retained from the manifest but not forwarded by this adapter (opencode defines per-server `timeout`). */
+      timeout?: number
+    }
 
 export interface LspServerDef {
   command: string

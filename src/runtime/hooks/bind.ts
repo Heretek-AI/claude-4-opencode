@@ -33,7 +33,7 @@ export async function bindHooks(
   ctx: Plugin.Context,
   state: { plugins: ActivePlugin[] },
   options: HookOptions,
-): Promise<() => void> {
+): Promise<() => Promise<void>> {
   const sessions = new Map<string, SessionState>()
   /** Sessions whose next prompt is one this plugin sent, which must not trigger UserPromptSubmit. */
   const internalPrompts = new Set<string>()
@@ -153,7 +153,9 @@ export async function bindHooks(
       // On failure there is no result to extend (`execute.after` cannot fail,
       // so throwing is not a channel). The mutated error is what the model
       // sees for a failed tool call, so the feedback rides along with it.
-      const text = feedback.join("\n\n")
+      // Drift I: `error` is not marked mutable upstream; this relies on object identity and is
+      // guarded, with a pinned E2E path for the completed-result case only.
+      const text = feedback.join("\n\n").slice(0, 2000)
       debug("hook feedback on failed tool", { tool: event.tool, feedback: text.slice(0, 2000) })
       try {
         const previous = event.error.message
@@ -169,6 +171,9 @@ export async function bindHooks(
       session.stopActive = false
       if (!hasHooks(state.plugins, "UserPromptSubmit") || (await isChild(event.sessionID))) return
       const outcome = await run(event.sessionID, { event: "UserPromptSubmit", payload: { prompt: event.prompt.text } })
+      // Drift J: opencode v2 session hooks are NoFailures — throwing keeps the prompt out but the
+      // API answers HTTP 500 with an empty body, so the block reason never reaches the caller.
+      // This is the only channel; do not replace with context-append (lets blocked prompts through).
       if (outcome.blocked !== undefined) throw new Error(outcome.blocked)
       if (outcome.context.length > 0) event.prompt.text += `\n\n${reminder(outcome.context)}`
     }),
@@ -217,6 +222,8 @@ export async function bindHooks(
     if (!hasHooks(state.plugins, name)) return
     const session = sessionState(sessionID)
     const outcome = await run(sessionID, { event: name, payload: { stop_hook_active: session.stopActive } })
+    // Disposal may have landed while run() was suspended; do not prompt after teardown.
+    if (disposed) return
     // The parent has already consumed a subagent's result, so a child cannot be made to continue.
     if (outcome.blocked === undefined || child) {
       session.stopActive = false
@@ -236,9 +243,11 @@ export async function bindHooks(
     }
   })().catch((error) => debug("event stream ended", { error: String(error) }))
 
-  return () => {
+  return async () => {
     disposed = true
-    for (const registration of registrations) void registration.dispose()
+    // Cleanup may be async: await registration disposals so hooks are
+    // unregistered before the host considers teardown complete.
+    await Promise.all(registrations.map((registration) => registration.dispose()))
   }
 }
 

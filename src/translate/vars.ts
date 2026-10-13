@@ -28,6 +28,11 @@ const ENV_PATTERN = /\$\{([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?\}/g
 /**
  * Like `substitute`, and also expands `${VAR}` and `${VAR:-default}` from the environment,
  * which MCP and LSP server definitions use for credentials.
+ *
+ * Drift E (intentional divergence): Claude plugins use `${VAR}` expanded here at translation
+ * time from `process.env`. opencode native config instead expands `{env:VAR}` at file-text
+ * level (`core/src/config/variable.ts`) and treats `${VAR}` literally. Do not migrate to
+ * `{env:}` — it would break every real-marketplace MCP credential and the probe fixture.
  */
 export function substituteWithEnv(text: string, context: VarContext, env: Record<string, string | undefined>): string {
   return substitute(text, context).replace(ENV_PATTERN, (whole, name: string, fallback: string | undefined) => {
