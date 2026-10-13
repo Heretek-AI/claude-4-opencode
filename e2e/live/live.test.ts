@@ -68,17 +68,21 @@ describe.skipIf(Object.keys(keys).length === 0)("live model", () => {
   async function attempt(prompt: string, accept: (events: RunEvent[]) => boolean): Promise<RunEvent[]> {
     let events: RunEvent[] = []
     for (let index = 0; index < ATTEMPTS; index++) {
-      events = (await sandbox.run(prompt, { timeoutMs: 240_000 })).events
+      const result = await sandbox.run(prompt, { timeoutMs: 240_000 })
+      events = result.events
       if (accept(events)) return events
       const toolsUsed =
         tools(events)
           .map((item) => item.tool)
           .join(", ") || "none"
       const textSnippet = text(events).replace(/\s+/g, " ").trim().slice(0, 200)
+      const err = result.stderr ? `; stderr: ${result.stderr.trim().slice(0, 300)}` : ""
+      const eventSummary =
+        events.length === 0 ? "; events: none" : `; events(${events.length}): ${events.map((e) => e.type).join(",")}`
       console.log(
-        `attempt ${index + 1} did not satisfy the scenario; tools used: ${toolsUsed}${
+        `attempt ${index + 1} did not satisfy the scenario; code: ${result.code}; tools: ${toolsUsed}${
           textSnippet ? `; text: "${textSnippet}"` : ""
-        }`,
+        }${err}${eventSummary}`,
       )
     }
     return events
