@@ -44,7 +44,7 @@ These are places where a Claude Code behavior has no opencode surface today. Eac
 - A server plugin has no channel for a notice to the user.
 - There is no plugin surface for LSP servers; they are configuration only.
 - Nothing distinguishes a session that was cleared or compacted from one that was started, so `SessionStart` reports only `startup` and `resume`.
-- MCP `cwd`/`timeout`/`disabled`/`codemode`/`protocol`/`oauth` are defined by opencode but omitted from this adapter's translation. `cwd`/`timeout` are retained on the def and warned about; the rest are warned and ignored (drift D).
+- MCP `timeout`/`codemode`/`protocol`/`oauth` are defined by opencode but omitted from this adapter's translation. `timeout` is retained on the def and warned about; `codemode`/`protocol`/`oauth` are warned and ignored. `disabled: true` skips registration with a warning. Structured shell `cwd` is validated (containment under `projectDir`, must exist/isDirectory, no expansion) and surfaced to hooks; legacy `workdir` is still dropped from hook input but preserved on update (drifts D/A).
 - Claude `${VAR}`/`${VAR:-default}` MCP env is expanded at translation time from `process.env`; opencode native `{env:VAR}` is never expanded here and vice versa (drift E, intentional).
-- Agent `tools` allowlists mentioning MCP/plugin tools grant nothing (fail-closed deny-all); MCP actions are never emitted as opencode permissions (drift G).
+- Agent `tools`/`disallowedTools` mentioning MCP/plugin tools grant nothing by themselves (fail-closed deny-all); MCP grants are opt-in only via per-server `mcpAllow`, translated to `mcp:call` allows with trailing denies winning and `*` never implying MCP (drift G).
 - `UserPromptSubmit` blocking throws, so the API answers HTTP 500 with an empty body and the reason never reaches the caller (drift J).

@@ -1,6 +1,6 @@
-# RFC — WS4: MCP permission opt-in (design only, not implemented)
+# RFC — WS4: MCP permission opt-in (implemented)
 
-Status: proposed. No code changed. Implements plan §1-D2 + §3-WS4.
+Status: implemented after approval. Implements plan §1-D2 + §3-WS4.
 Refs: `src/translate/tools.ts:12-56`, `src/translate/components.ts:40-57`,
 `src/runtime/hooks/bind.ts:95-108`, `test/tools.test.ts:4-63`.
 
@@ -60,5 +60,4 @@ per-server declaration. `*` never implies MCP.
 ## Non-goals
 
 No `resource` scoping beyond the exact triple. No per-file/per-path MCP
-resources. No change to `ACTIONS` or built-in mapping. No implementation
-until this RFC is approved.
+resources. No change to `ACTIONS` or built-in mapping.

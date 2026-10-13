@@ -24,7 +24,7 @@ export function transcriptLines(messages: readonly unknown[], sessionID: string,
       if (part.type === "text") line("assistant", [{ type: "text", text: String(part.text ?? "") }])
       if (part.type !== "tool") continue
       const state = isRecord(part.state) ? part.state : {}
-      const call = toClaudeToolCall(String(part.name), state.input)
+      const call = toClaudeToolCall(String(part.name), state.input, cwd)
       line("assistant", [{ type: "tool_use", id: part.id, name: call.name, input: call.input }])
       if (state.status !== "completed" && state.status !== "error") continue
       const result = state.status === "completed" ? (state.output ?? state.content ?? "") : (state.error ?? "")

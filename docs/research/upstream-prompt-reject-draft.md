@@ -1,8 +1,8 @@
-# DRAFT — upstream issue for sst/opencode (WS7, not yet filed)
+# FILED — upstream issue for sst/opencode (WS7)
 
-Filing requires a maintainer with GitHub access to `sst/opencode`.
-Do not auto-file from agent loops. Copy the body below into a new
-`sst/opencode` issue and link it back here.
+Filed as https://github.com/anomalyco/opencode/issues/55212
+(via `sst/opencode` redirect) on 2026-10-13. Drift J is kept until it lands.
+Original draft body retained below for reference.
 
 ---
 

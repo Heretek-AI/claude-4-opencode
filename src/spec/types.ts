@@ -37,6 +37,8 @@ export interface AgentDef {
   model?: string
   tools?: string[]
   disallowedTools?: string[]
+  /** Opt-in MCP grants: `<server>:<tool>` or `<server>:*`. Fail-closed; `*` never implies MCP. */
+  mcpAllow?: string[]
   color?: string
   body: string
   path: string

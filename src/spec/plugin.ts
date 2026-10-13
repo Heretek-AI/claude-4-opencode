@@ -539,6 +539,7 @@ function addAgent(file: string, segments: string[], context: Context, agents: Ma
   const model = asString(markdown.data.model)
   const tools = asStringList(markdown.data.tools)
   const disallowedTools = asStringList(markdown.data.disallowedTools)
+  const mcpAllow = asStringList(markdown.data.mcpAllow)
   const color = asString(markdown.data.color)
   agents.set(id, {
     id,
@@ -546,6 +547,7 @@ function addAgent(file: string, segments: string[], context: Context, agents: Ma
     ...(model === undefined ? {} : { model }),
     ...(tools === undefined ? {} : { tools }),
     ...(disallowedTools === undefined ? {} : { disallowedTools }),
+    ...(mcpAllow === undefined ? {} : { mcpAllow }),
     ...(color === undefined ? {} : { color }),
     body: markdown.body,
     path: file,

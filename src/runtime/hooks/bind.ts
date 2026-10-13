@@ -104,7 +104,7 @@ export async function bindHooks(
         }
       }
     }
-    return toClaudeToolCall(tool, input)
+    return toClaudeToolCall(tool, input, options.projectDir)
   }
 
   const registrations = [

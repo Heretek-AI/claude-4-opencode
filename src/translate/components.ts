@@ -41,9 +41,11 @@ export interface OpencodeAgent {
  * Claude model aliases (`sonnet`, `opus`, `inherit`) have no provider-neutral meaning in opencode,
  * so translated agents inherit the session's model.
  *
- * Drift G: `permissions` only covers built-in tools. MCP/plugin tool names (`mcp__*`) map to
- * nothing and grant nothing (fail-closed). Mapping them to `shell`/`read` would over-privilege
- * read-only agents, so an allowlist mentioning MCP tools stays deny-all until an opt-in exists.
+ * Drift G: `permissions` covers built-in tools via `tools`/`disallowedTools`.
+ * MCP/plugin tool names (`mcp__*`) in those lists still grant nothing by themselves
+ * (fail-closed); MCP access is opt-in only via the per-server `mcpAllow`
+ * frontmatter (`<server>:<tool>` / `<server>:*`), translated to `mcp:call`
+ * allows with trailing denies winning. `*` never implies MCP.
  */
 export function toAgent(agent: AgentDef, context: VarContext): OpencodeAgent {
   return {
@@ -52,7 +54,7 @@ export function toAgent(agent: AgentDef, context: VarContext): OpencodeAgent {
     system: substitute(agent.body, context).trim(),
     mode: "subagent",
     ...(agent.color === undefined ? {} : { color: agent.color }),
-    permissions: agentPermissions(agent.tools, agent.disallowedTools),
+    permissions: agentPermissions(agent.tools, agent.disallowedTools, agent.mcpAllow),
   }
 }
 

@@ -1,6 +1,6 @@
-# RFC — WS5: structured `cwd` handling (design only, not implemented)
+# RFC — WS5: structured `cwd` handling (implemented)
 
-Status: proposed. No code changed. Implements plan §3-WS5.
+Status: implemented after approval. Implements plan §3-WS5.
 Refs: `src/translate/tools.ts:72-77,97-111`, `src/runtime/hooks/engine.ts:124-137`,
 `src/translate/commands.ts:126-182`.
 
@@ -54,4 +54,4 @@ until hook visibility ships.
 ## Non-goals
 
 No `cd`-prefix parsing. No shell-expansion of cwd. No hook-writable cwd
-until visibility ships. No implementation until this RFC is approved.
+(hooks cannot set cwd through `updatedInput`; original is preserved).
