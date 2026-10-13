@@ -244,7 +244,7 @@ test("MCP cwd/timeout are retained but warned, unknown keys are warned and ignor
   const root = tree({
     ".mcp.json": {
       mcpServers: {
-        local: { command: "node", args: ["s.js"], env: {}, cwd: "/tmp", timeout: 30, disabled: true },
+        local: { command: "node", args: ["s.js"], env: {}, cwd: "/tmp", timeout: 30 },
         remote: { type: "http", url: "https://x.test/mcp", timeout: "45", oauth: "x" },
       },
     },
@@ -253,10 +253,90 @@ test("MCP cwd/timeout are retained but warned, unknown keys are warned and ignor
   expect(plugin.mcpServers.local).toMatchObject({ type: "stdio", command: "node", cwd: "/tmp", timeout: 30 })
   expect(plugin.mcpServers.remote).toMatchObject({ type: "http", timeout: 45 })
   const messages = plugin.issues.map((issue) => issue.message)
-  expect(messages.some((message) => message.includes("local") && message.includes("disabled"))).toBe(true)
   expect(messages.some((message) => message.includes("local") && message.includes("cwd"))).toBe(true)
   expect(messages.some((message) => message.includes("remote") && message.includes("oauth"))).toBe(true)
   expect(plugin.issues.every((issue) => issue.level === "warning")).toBe(true)
+})
+
+test("MCP disabled:true on a stdio server skips registration with a warning", () => {
+  const root = tree({
+    ".mcp.json": {
+      mcpServers: {
+        off: { command: "node", args: ["s.js"], disabled: true },
+        on: { command: "node", args: ["s.js"] },
+      },
+    },
+  })
+  const plugin = loadPlugin({ root })
+  expect(Object.keys(plugin.mcpServers)).toEqual(["on"])
+  expect(plugin.issues).toEqual([{ level: "warning", message: "MCP server off is disabled and was skipped" }])
+})
+
+test("MCP disabled:true on a remote server skips registration with a warning", () => {
+  const root = tree({
+    ".mcp.json": {
+      mcpServers: {
+        off: { type: "http", url: "https://x.test/mcp", disabled: true },
+        on: { type: "http", url: "https://x.test/mcp" },
+      },
+    },
+  })
+  const plugin = loadPlugin({ root })
+  expect(Object.keys(plugin.mcpServers)).toEqual(["on"])
+  expect(plugin.issues).toEqual([{ level: "warning", message: "MCP server off is disabled and was skipped" }])
+})
+
+test("MCP disabled:false and non-boolean disabled register with a warning", () => {
+  const root = tree({
+    ".mcp.json": {
+      mcpServers: {
+        no: { command: "node", args: ["s.js"], disabled: false },
+        str: { command: "node", args: ["s.js"], disabled: "true" },
+      },
+    },
+  })
+  const plugin = loadPlugin({ root })
+  expect(Object.keys(plugin.mcpServers).toSorted()).toEqual(["no", "str"])
+  const messages = plugin.issues.map((issue) => issue.message)
+  expect(messages.some((message) => message.includes("no") && message.includes("disabled"))).toBe(true)
+  expect(messages.some((message) => message.includes("str") && message.includes("disabled"))).toBe(true)
+  expect(plugin.issues.every((issue) => issue.level === "warning")).toBe(true)
+})
+
+test("MCP codemode/protocol/oauth warn but do not skip registration", () => {
+  const root = tree({
+    ".mcp.json": {
+      mcpServers: {
+        srv: {
+          command: "node",
+          args: ["s.js"],
+          codemode: true,
+          protocol: "streamable",
+          oauth: { issuer: "https://x.test" },
+        },
+      },
+    },
+  })
+  const plugin = loadPlugin({ root })
+  expect(Object.keys(plugin.mcpServers)).toEqual(["srv"])
+  const messages = plugin.issues.map((issue) => issue.message)
+  for (const key of ["codemode", "protocol", "oauth"])
+    expect(messages.some((message) => message.includes("srv") && message.includes(key))).toBe(true)
+  expect(plugin.issues.every((issue) => issue.level === "warning")).toBe(true)
+})
+
+test("MCP disabled:true wins over the empty-url placeholder", () => {
+  const root = tree({
+    ".mcp.json": {
+      mcpServers: {
+        off: { type: "http", url: "", disabled: true },
+        real: { type: "http", url: "https://x.test/mcp" },
+      },
+    },
+  })
+  const plugin = loadPlugin({ root })
+  expect(Object.keys(plugin.mcpServers)).toEqual(["real"])
+  expect(plugin.issues).toEqual([{ level: "warning", message: "MCP server off is disabled and was skipped" }])
 })
 
 test("entry mcpServers and lspServers apply only when the entry is the manifest", () => {

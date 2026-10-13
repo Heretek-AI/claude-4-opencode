@@ -634,6 +634,16 @@ function readMcpMap(map: Record<string, unknown>, context: Context): Record<stri
   const result: Record<string, McpServerDef> = {}
   for (const [name, config] of Object.entries(map)) {
     if (!isRecord(config)) continue
+    // Opencode native: `disabled: true` prevents connection. Skip before
+    // the stdio/remote branches so disabled servers never register.
+    // Strict `=== true`: false / "true" / absent fall through to warn-only.
+    if (config.disabled === true) {
+      context.issues.push({
+        level: "warning",
+        message: `MCP server ${name} is disabled and was skipped`,
+      })
+      continue
+    }
     const command = asString(config.command)
     const url = asString(config.url)
     if (command !== undefined) {
@@ -716,9 +726,11 @@ function asTimeout(value: unknown): number | undefined {
 }
 
 /**
- * `cwd`, `disabled`, `codemode`, `protocol`, and `oauth` are defined by opencode but omitted
+ * `cwd`, `codemode`, `protocol`, and `oauth` are defined by opencode but omitted
  * from this adapter's translation. `cwd`/`timeout` are retained on the def for reporting;
  * everything else is reported and ignored instead of being silently dropped (drift D).
+ * `disabled === true` is enforced in `readMcpMap` (skipped before registration);
+ * any other `disabled` value falls through to the warn-only path below.
  */
 function warnUntranslatedMcp(
   name: string,
