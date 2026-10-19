@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 45
     env:
       OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-      C4O_LIVE_MODEL: ${{ inputs.model || vars.E2E_LIVE_MODEL || 'muse-spark-1.3-contributor-free' }}
+      C4O_LIVE_MODEL: ${{ inputs.model || vars.OPENCODE_MODEL || 'opencode/muse-spark-1.3-contributor' }}
     steps:
       - name: Check for a provider key
         id: key
