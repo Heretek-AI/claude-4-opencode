@@ -1,7 +1,7 @@
 {
-  "claudeCode": "2.1.287",
+  "claudeCode": "2.1.310",
   "repo": "anthropics/claude-plugins-official",
-  "sha": "b8e53f1c05dff3b6d751297f6527990ffc81c2f4",
+  "sha": "58267944f92187b7d6a1c822165c96c81c864806",
   "failed": {},
   "plugins": {
     "agent-sdk-dev": {
