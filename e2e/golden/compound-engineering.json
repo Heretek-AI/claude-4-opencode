@@ -1,7 +1,7 @@
 {
-  "claudeCode": "2.1.287",
+  "claudeCode": "2.1.310",
   "repo": "EveryInc/compound-engineering-plugin",
-  "sha": "51aa537383744736eb8ad30468d34420e9fb8ea8",
+  "sha": "9f5b16fc617fb5bf4817c8f42537b626c17abd05",
   "failed": {},
   "plugins": {
     "compound-engineering": {
