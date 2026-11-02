@@ -1,7 +1,7 @@
 {
-  "claudeCode": "2.1.287",
+  "claudeCode": "2.1.316",
   "repo": "EveryInc/compound-engineering-plugin",
-  "sha": "51aa537383744736eb8ad30468d34420e9fb8ea8",
+  "sha": "77cc431daaebea7ee9f33ac530a66eec5404572b",
   "failed": {},
   "plugins": {
     "compound-engineering": {
@@ -19,6 +19,7 @@
         "compound-engineering:ce-dogfood",
         "compound-engineering:ce-explain",
         "compound-engineering:ce-handoff",
+        "compound-engineering:ce-help",
         "compound-engineering:ce-ideate",
         "compound-engineering:ce-noslop",
         "compound-engineering:ce-optimize",
@@ -57,6 +58,7 @@
         "compound-engineering:ce-dogfood",
         "compound-engineering:ce-explain",
         "compound-engineering:ce-handoff",
+        "compound-engineering:ce-help",
         "compound-engineering:ce-ideate",
         "compound-engineering:ce-noslop",
         "compound-engineering:ce-optimize",
