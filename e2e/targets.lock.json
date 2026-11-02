@@ -2,27 +2,27 @@
   "marketplaces": {
     "claude-plugins-official": {
       "repo": "anthropics/claude-plugins-official",
-      "sha": "b8e53f1c05dff3b6d751297f6527990ffc81c2f4"
+      "sha": "a7ba5b93db0c7c8d17f3f1d25853adca79598a1a"
     },
     "anthropic-agent-skills": {
       "repo": "anthropics/skills",
-      "sha": "dbd4588f9e1033efb41dad4bef2f7947c8993d44"
+      "sha": "ca45fc496a3436251f191354091d557da31c15b5"
     },
     "knowledge-work-plugins": {
       "repo": "anthropics/knowledge-work-plugins",
-      "sha": "95bdacc803aa5cfdb10f35e5b9fb2d4b11100133"
+      "sha": "2574e29377c7173d0cecffef29a6ecbd7f8ccb5d"
     },
     "superpowers-marketplace": {
       "repo": "obra/superpowers-marketplace",
-      "sha": "2cf27fa76667afa0ba724ad8141a6938a3834e32"
+      "sha": "87b5911c829706f0665aab18462c40cd47822835"
     },
     "wshobson-agents": {
       "repo": "wshobson/agents",
-      "sha": "46891e7e60da0e52baf1050b7b6391b64e84c6d9"
+      "sha": "7e2fb559cf4b824b27f1fec49fe88f7511066d26"
     },
     "compound-engineering": {
       "repo": "EveryInc/compound-engineering-plugin",
-      "sha": "51aa537383744736eb8ad30468d34420e9fb8ea8"
+      "sha": "77cc431daaebea7ee9f33ac530a66eec5404572b"
     }
   }
 }
