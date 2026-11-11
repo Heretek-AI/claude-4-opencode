@@ -1,7 +1,7 @@
 {
-  "claudeCode": "2.1.287",
+  "claudeCode": "2.1.296",
   "repo": "anthropics/knowledge-work-plugins",
-  "sha": "95bdacc803aa5cfdb10f35e5b9fb2d4b11100133",
+  "sha": "02ffa99ff00ce4d3046ccebabb8357cb39f3ab06",
   "failed": {},
   "plugins": {
     "apollo": {
