@@ -37,5 +37,5 @@ permissions:
 
 jobs:
   review:
-    uses: Heretek-AI/.github/.github/workflows/ocr-review.yml@cfc9918e58a4dc93d59157748dd08ec0bdfddb59 # main
+    uses: Heretek-AI/.github/.github/workflows/ocr-review.yml@f6c0fab5945d22678bb607866f181f608c22581a # main
     secrets: inherit
